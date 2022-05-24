@@ -1,8 +1,12 @@
 {
 	"name": "markdown-to",
 	"version": "1.0.1",
-	"description": "",
+	"description": "一个将markdown文件转换成vue、html、jsx、tsx格式文件的工具，支持批量转换与翻译。",
 	"main": "index.js",
+	"homepage": "https://github.com/const-love-365-10000/markdown-to",
+	"bugs": {
+		"url": "https://github.com/const-love-365-10000/markdown-to/issues"
+	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "tsc && node .build/start.js",
@@ -14,7 +18,7 @@
 		"markdown-to"
 	],
 	"author": "yujin321",
-	"license": "ISC",
+	"license": "MIT",
 	"dependencies": {
 		"@vitalets/google-translate-api": "^8.0.0",
 		"commander": "^9.2.0",
