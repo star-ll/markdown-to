@@ -15,7 +15,7 @@ Install markdown-to with npm or yarn
   yarn add -D markdown-to
 ```
     
-## Demo
+## Usage
 
 作为npm package时：
 ```javascript

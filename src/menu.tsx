@@ -1,4 +1,4 @@
-import { Md } from "./type/index";
+import { Md } from "../type/index";
 import { access, readFile } from "fs/promises";
 import { join, resolve } from "path";
 import { exec } from "child_process";

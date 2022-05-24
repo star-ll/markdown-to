@@ -9,9 +9,9 @@
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "tsc && node .build/start.js",
-		"start:menu": "tsc && node .build/menu.js",
-		"start:translate": "tsc && node .build/start.js --translate"
+		"start": "tsc && node start.js",
+		"start:menu": "tsc && node menu.js",
+		"start:translate": "tsc && node start.js --translate"
 	},
 	"keywords": [
 		"markdown",
