@@ -1,65 +1,57 @@
-import { Md, Config } from "./type";
-import translateFn from "@vitalets/google-translate-api";
+import { Md, Config, Options } from "./type";
 import path from "path";
 import { writeFileSync, readFileSync, statSync } from "fs";
-import {
-	readFile,
-	writeFile,
-	mkdir,
-	stat,
-	readdir,
-	access,
-	rm,
-} from "fs/promises";
-import MarkdownIt from "markdown-it";
-import hljs from "highlight.js"; // https://highlightjs.org/
+import { mkdir, readdir, access, rm } from "fs/promises";
+
 import { handleToc } from "./src/menu";
-
-const markdownIt: any = new MarkdownIt({
-	typographer: true,
-	linkify: true,
-	langPrefix: "mdto-",
-	xhtmlOut: true,
-	highlight: function (str, lang) {
-		if (lang && hljs.getLanguage(lang)) {
-			try {
-				return hljs.highlight(str, { language: lang }).value;
-			} catch (__) {}
-		}
-
-		return ""; // use external default escaping
-	},
-});
+import { translate } from "./src/translate";
+import { parseMd, markdownIt, parseDir } from "./src/parse";
+import { generateFile } from "./src/file";
 
 export class MarkdownTo {
 	private template: string;
-	public mds: Md[];
-	private isTranslate: boolean = false;
+	public mds: Md[] = [];
 	private outBaseDir: string;
 	private outDir: string;
 	private rootDir: string;
-	private config: Config = { type: "vue" };
-	constructor(rootDir: string, outDir: string, config: Config) {
+	private config: Options;
+	constructor(rootDir: string, outDir: string, config: Config = {}) {
 		const res = statSync(rootDir);
-		if (!res?.isDirectory()) {
-			throw new Error("rootDir不是一个目录");
+		try {
+			if (!res?.isDirectory()) {
+				console.error("rootDir不是一个目录");
+			}
+		} catch (err) {
+			console.error("根目录路径不存在\n", err);
 		}
 
-		this.mds = [];
-		this.isTranslate =
-			config.isTranslate || process.argv.includes("--translate");
 		this.rootDir = path.resolve(rootDir);
-		this.template = readFileSync(
-			path.join(__dirname, `./preset/preset.${config.type}`),
-			{
-				encoding: "utf-8",
-			}
-		);
 		this.outBaseDir = path.resolve(outDir);
-		this.outDir = path.join(this.outBaseDir, config.type);
-		this.config.ignores = config.ignores || [];
-		this.config.type = config.type || "vue";
-		this.config.md = config.md || /\.md$/;
+		this.outDir = path.join(this.outBaseDir, config.type || "vue");
+		this.config = {
+			md: config.md || /\.md$/,
+			type: config.type || "vue",
+			ignores: config.ignores || [],
+			rootDir: this.rootDir || "./",
+			outDir: this.outDir || "./dist",
+			toc: config.toc || false,
+			isTranslate:
+				config.isTranslate ||
+				process.argv.includes("--translate") ||
+				false,
+			translate:
+				typeof config.translate === "function"
+					? config.translate
+					: translate,
+			template: readFileSync(
+				path.join(__dirname, `./preset/preset.${config.type}`),
+				{
+					encoding: "utf-8",
+				}
+			),
+		};
+
+		this.template = this.config.template;
 	}
 	public async render() {
 		await this.check();
@@ -68,10 +60,7 @@ export class MarkdownTo {
 	private check() {
 		// 检查输出目录，如果输出目录不存在则创建
 		rm(this.outBaseDir, { recursive: true, force: true })
-			.then(
-				() => access(this.outBaseDir),
-				(err: Error) => {}
-			)
+			.then(() => access(this.outBaseDir))
 			.catch(() => mkdir(this.outBaseDir))
 			.then(() => access(this.outDir))
 			.catch(() => mkdir(this.outDir));
@@ -84,11 +73,15 @@ export class MarkdownTo {
 			if (!Array.isArray(fileNames) || fileNames?.length <= 0) {
 				throw new Error("空目录");
 			}
-			this.mds = await this.parsePath(fileNames, this.rootDir);
+			this.mds = await this.parseDir(
+				fileNames,
+				this.rootDir,
+				this.config
+			);
 		}
 		const tocList = await this.handleToc(this.mds);
 		let list = "";
-		for (let t of Object.values(tocList)) {
+		for (const t of Object.values(tocList)) {
 			list += t + "\n";
 		}
 		list = markdownIt.render(list);
@@ -102,166 +95,30 @@ export class MarkdownTo {
 		);
 	}
 
-	private start() {
-		readdir(this.rootDir)
-			.then((fileNames: string[] | void) => {
-				if (!Array.isArray(fileNames) || fileNames?.length <= 0) {
-					throw new Error("空目录");
-				}
-				console.time("解析文件信息");
-				return this.parsePath(fileNames, this.rootDir);
-			})
-			.then((res: Md[]) => {
-				console.timeEnd("解析文件信息");
-				console.time("输出map.json");
-				this.mds.push(...res);
-				writeFileSync("./map.json", JSON.stringify(this.mds));
-				console.timeEnd("输出map.json");
-				return res;
-			})
-			.then((res: Md[]) => {
-				console.time("解析Markdown");
-				return this.parseMd(res);
-			})
-			.then((res: Md[]) => {
-				console.timeEnd("解析Markdown");
-				console.time("输出文件");
-				return this.generateFile(res);
-			})
-			.then(() => {
-				console.timeEnd("输出文件");
-			})
-			.catch((err: Error) => {
-				console.error(err);
-			});
-	}
-
-	private async parsePath(files: string[], baseDir = this.rootDir) {
-		const md: any = [];
-		for (let i = 0; i < files.length; i++) {
-			const file = files[i];
-			const filePath = path.join(baseDir, file);
-			if (
-				Array.isArray(this.config.ignores) &&
-				this.config.ignores.includes(file)
-			) {
-				continue;
-			}
-			const fileStat = await stat(filePath);
-			if (fileStat.isDirectory()) {
-				const filePaths = await readdir(filePath);
-				const parseResult: Md[] = await this.parsePath(
-					filePaths,
-					filePath
-				);
-				if (parseResult?.length > 0) md.push(parseResult);
-			} else if (fileStat.isFile() && this.config.md?.test(file)) {
-				const o: Md = {
-					path: filePath,
-					categories: path
-						.relative(this.rootDir, baseDir)
-						.split(path.normalize("//")),
-					title: path.basename(file).replace(path.extname(file), ""),
-					createTime: fileStat.birthtime,
-					updateTime: fileStat.mtime,
-				};
-
-				if (this.isTranslate === true) {
-					if (!/^[a-zA-z0-9_\-]+$/.test(o.title)) {
-						const title = o.title;
-						let tran = await this.translate(o.title);
-						o.title_en = tran?.replace(/\s/g, "_") || title;
-					}
-					for (let i = 0; i < o.categories.length; i++) {
-						const category = o.categories[i];
-						if (!/^[a-zA-z0-9_\-]+$/.test(category)) {
-							let tran = await this.translate(category);
-							o.categories[i] =
-								tran?.replace(/\s/g, "_") || category;
-						}
-					}
-				}
-				md.push(o);
-			}
+	private async start() {
+		const fileNames = await readdir(this.rootDir);
+		if (!Array.isArray(fileNames) || fileNames?.length <= 0) {
+			throw new Error("空目录");
 		}
-		return md;
+		console.time("解析文件信息");
+		const mds = await this.parseDir(fileNames, this.rootDir, this.config);
+		console.timeEnd("解析文件信息");
+		console.time("输出map.json");
+		this.mds.push(...mds);
+		writeFileSync("./map.json", JSON.stringify(this.mds));
+		console.timeEnd("输出map.json");
+		console.time("解析Markdown");
+		await this.parseMd(mds, this.config);
+		console.timeEnd("解析Markdown");
+		console.time("输出文件");
+		await this.generateFile(mds, this.config);
+		console.timeEnd("输出文件");
 	}
 
-	private async parseMd(mdArr: Md[]) {
-		// 解析markdown
-		for (let i = 0; i < mdArr.length; i++) {
-			const mdObj = mdArr[i];
-			if (Array.isArray(mdObj)) {
-				await this.parseMd(mdObj);
-			} else {
-				const content = await readFile(mdObj.path, {
-					encoding: "utf-8",
-				});
-				mdObj.parseContent = JSON.stringify(markdownIt.render(content));
+	// 解析rootDir，生成mds
+	private parseDir = parseDir;
 
-				if (["tsx", "jsx"].includes(this.config.type)) {
-					// jsx中转义{}，替换class
-					mdObj.parseContent = mdObj.parseContent
-						.replace(/\{/g, "&#123")
-						.replace(/\}/g, "&#125")
-						.replace(/class/g, "className");
-				}
-			}
-		}
-		return mdArr;
-	}
+	private parseMd = parseMd;
 
-	private async generateFile(mdArr: Md[]) {
-		for (let i = 0; i < mdArr.length; i++) {
-			const mdObj = mdArr[i];
-			if (Array.isArray(mdObj)) {
-				await this.generateFile(mdObj);
-			} else {
-				const categories = mdObj.categories;
-				// 创建目录
-				let dirPath = path.resolve(this.outDir);
-				for (let i = 0; i < categories.length; i++) {
-					const category = categories[i];
-					dirPath = path.join(dirPath, category);
-					try {
-						await access(dirPath);
-					} catch {
-						await mkdir(dirPath);
-					}
-				}
-				let content = this.template;
-				content = content.replace(
-					"{- html -}",
-					mdObj.parseContent ? JSON.parse(mdObj.parseContent) : ""
-				);
-
-				await writeFile(
-					path.join(
-						dirPath,
-						`${mdObj.title_en || mdObj.title}.${this.config.type}`
-					),
-					content,
-					{
-						encoding: "utf-8",
-						flag: "w+",
-					}
-				);
-			}
-		}
-		return mdArr;
-	}
-
-	private translate(q): Promise<string | void> | string {
-		if (!q) {
-			return "";
-		}
-		return translateFn(q, { to: "en" })
-			.then((res) => {
-				console.log(q + "  =>  " + res.text);
-				return res.text;
-			})
-			.catch((err) => {
-				console.error(q, "\n", err);
-			});
-	}
+	private generateFile = generateFile;
 }

@@ -1,5 +1,6 @@
 import { Md } from "../type";
 const tocList = {};
+// 生成目录文件
 export function handleToc(mds: Md[]) {
 	for (let i = 0; i < mds.length; i++) {
 		const md = mds[i];
@@ -20,4 +21,9 @@ export function handleToc(mds: Md[]) {
 		}
 	}
 	return tocList;
+}
+
+// 为所有输出文件生成toc目录
+export function createMdToc(mds: Md[]) {
+	console.log(mds);
 }

@@ -84,6 +84,8 @@ const mdTo = new MarkdownTo("/base", "./dist", options);
 mdTo.render();
 ```
 
+> 注意： 翻译API默认使用的是google-translate，请确保你的网络能访问，或者你可以自行修改使用其他翻译API，例如百度翻译API。
+
 ### toc-file
 
 有时你可能需要一个包含所有文章的目录界面，你可以使用
