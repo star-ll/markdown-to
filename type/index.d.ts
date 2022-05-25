@@ -1,7 +1,7 @@
 export interface Config {
-	md: RegExp;
-	ignores: string[];
 	type: Types;
+	md?: RegExp;
+	ignores?: string[];
 	isTranslate?: boolean;
 }
 
