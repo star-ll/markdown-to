@@ -1,4 +1,3 @@
-import { Md, Config, Options } from "./type";
 import path from "path";
 import { writeFileSync, readFileSync, statSync } from "fs";
 import { mkdir, readdir, access, rm } from "fs/promises";
@@ -44,7 +43,7 @@ export class MarkdownTo {
 					? config.translate
 					: translate,
 			template: readFileSync(
-				path.join(__dirname, `./preset/preset.${config.type}`),
+				path.resolve(__dirname, `../preset/preset.${config.type}`),
 				{
 					encoding: "utf-8",
 				}

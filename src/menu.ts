@@ -1,4 +1,3 @@
-import { Md } from "../type";
 import { markdownIt } from "./parse";
 const tocList = {};
 // 生成目录文件

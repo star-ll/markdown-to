@@ -1,4 +1,3 @@
-import { Config } from "type/index";
 import { MarkdownTo } from "./index";
 
 const options: Config = {

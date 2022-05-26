@@ -44,7 +44,7 @@ class MarkdownTo {
             translate: typeof config.translate === "function"
                 ? config.translate
                 : translate_1.translate,
-            template: (0, fs_1.readFileSync)(path_1.default.join(__dirname, `./preset/preset.${config.type}`), {
+            template: (0, fs_1.readFileSync)(path_1.default.resolve(__dirname, `../preset/preset.${config.type}`), {
                 encoding: "utf-8",
             }),
         };

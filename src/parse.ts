@@ -1,4 +1,3 @@
-import { Md, Options } from "../type";
 import { readFile, stat, readdir } from "fs/promises";
 import path from "path";
 import MarkdownIt from "markdown-it";

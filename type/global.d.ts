@@ -1,4 +1,4 @@
-export interface Config {
+declare interface Config {
 	type?: Types;
 	md?: RegExp;
 	ignores?: string[];
@@ -7,7 +7,7 @@ export interface Config {
 	toc?: string[] | boolean;
 }
 
-export interface Options {
+declare interface Options {
 	rootDir: string;
 	outDir: string;
 	template: string;
@@ -19,7 +19,7 @@ export interface Options {
 	toc: string[] | boolean;
 }
 
-export interface Md {
+declare interface Md {
 	path: string;
 	categories: string[];
 	title: string;

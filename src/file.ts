@@ -1,4 +1,3 @@
-import { Md, Options } from "../type";
 import path from "path";
 import { writeFile, mkdir, access } from "fs/promises";
 
