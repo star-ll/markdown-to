@@ -43,7 +43,10 @@ export class MarkdownTo {
 					? config.translate
 					: translate,
 			template: readFileSync(
-				path.resolve(__dirname, `../preset/preset.${config.type}`),
+				path.resolve(
+					__dirname,
+					`../preset/preset.${config.type || "vue"}`
+				),
 				{
 					encoding: "utf-8",
 				}

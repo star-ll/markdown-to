@@ -21,9 +21,6 @@ function handleToc(mds) {
                 }
                 li = "\t" + li;
             }
-            if (md.title.indexOf("基于Stencil") >= 0) {
-                console.log(li + `[${md.title}](${allCategory + md.title + "/"})`);
-            }
             tocList[allCategory + md.title] =
                 li +
                     `[${md.title}](${allCategory + md.title.replace(/\s/g, "_") + "/"})`;
