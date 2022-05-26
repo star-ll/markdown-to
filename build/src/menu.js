@@ -12,16 +12,21 @@ function handleToc(mds) {
         }
         else {
             let li = "- ";
-            let allCategory = "";
+            let allCategory = "/";
             for (let j = 0; j < md.categories.length; j++) {
                 const category = md.categories[j];
-                allCategory += category;
+                allCategory += category + "/";
                 if (!tocList[allCategory]) {
                     tocList[allCategory] = li + category;
                 }
                 li = "\t" + li;
             }
-            tocList[allCategory + md.title] = li + md.title;
+            if (md.title.indexOf("基于Stencil") >= 0) {
+                console.log(li + `[${md.title}](${allCategory + md.title + "/"})`);
+            }
+            tocList[allCategory + md.title] =
+                li +
+                    `[${md.title}](${allCategory + md.title.replace(/\s/g, "_") + "/"})`;
         }
     }
     return tocList;

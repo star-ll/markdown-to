@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const options = {
     ignores: [".git", "面试经历"],
-    type: "html",
+    type: "tsx",
     toc: true,
 };
 const mdTo = new index_1.MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);
