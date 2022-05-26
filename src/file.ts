@@ -4,11 +4,11 @@ import { writeFile, mkdir, access } from "fs/promises";
 
 export async function generateFile(mdArr: Md[], config: Options) {
 	for (let i = 0; i < mdArr.length; i++) {
-		const mdObj = mdArr[i];
-		if (Array.isArray(mdObj)) {
-			await generateFile(mdObj, config);
+		const md = mdArr[i];
+		if (Array.isArray(md)) {
+			await generateFile(md, config);
 		} else {
-			const categories = mdObj.categories;
+			const categories = md.categories;
 			// 创建目录
 			let dirPath = path.resolve(config.outDir);
 			for (let i = 0; i < categories.length; i++) {
@@ -23,14 +23,19 @@ export async function generateFile(mdArr: Md[], config: Options) {
 			let content = config.template;
 			content = content.replace(
 				"{- html -}",
-				mdObj.parseContent ? JSON.parse(mdObj.parseContent) : ""
+				md.parseContent ? JSON.parse(md.parseContent) : ""
 			);
 
+			// toc
+			if (
+				config.toc === true ||
+				(Array.isArray(config.toc) && config.toc.includes(md.title))
+			) {
+				if (md.toc) content = md.toc + "<br />" + content;
+			}
+
 			await writeFile(
-				path.join(
-					dirPath,
-					`${mdObj.title_en || mdObj.title}.${config.type}`
-				),
+				path.join(dirPath, `${md.title_en || md.title}.${config.type}`),
 				content,
 				{
 					encoding: "utf-8",

@@ -3,7 +3,7 @@ import path from "path";
 import { writeFileSync, readFileSync, statSync } from "fs";
 import { mkdir, readdir, access, rm } from "fs/promises";
 
-import { handleToc } from "./src/menu";
+import { createMdToc, handleToc } from "./src/menu";
 import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
 import { generateFile } from "./src/file";
@@ -110,6 +110,8 @@ export class MarkdownTo {
 		console.time("解析Markdown");
 		await this.parseMd(mds, this.config);
 		console.timeEnd("解析Markdown");
+		// toc目录
+		if (this.config.toc) await createMdToc(mds);
 		console.time("输出文件");
 		await this.generateFile(mds, this.config);
 		console.timeEnd("输出文件");

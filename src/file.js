@@ -8,12 +8,12 @@ const path_1 = __importDefault(require("path"));
 const promises_1 = require("fs/promises");
 async function generateFile(mdArr, config) {
     for (let i = 0; i < mdArr.length; i++) {
-        const mdObj = mdArr[i];
-        if (Array.isArray(mdObj)) {
-            await generateFile(mdObj, config);
+        const md = mdArr[i];
+        if (Array.isArray(md)) {
+            await generateFile(md, config);
         }
         else {
-            const categories = mdObj.categories;
+            const categories = md.categories;
             // 创建目录
             let dirPath = path_1.default.resolve(config.outDir);
             for (let i = 0; i < categories.length; i++) {
@@ -27,8 +27,14 @@ async function generateFile(mdArr, config) {
                 }
             }
             let content = config.template;
-            content = content.replace("{- html -}", mdObj.parseContent ? JSON.parse(mdObj.parseContent) : "");
-            await (0, promises_1.writeFile)(path_1.default.join(dirPath, `${mdObj.title_en || mdObj.title}.${config.type}`), content, {
+            content = content.replace("{- html -}", md.parseContent ? JSON.parse(md.parseContent) : "");
+            // toc
+            if (config.toc === true ||
+                (Array.isArray(config.toc) && config.toc.includes(md.title))) {
+                if (md.toc)
+                    content = md.toc + "<br />" + content;
+            }
+            await (0, promises_1.writeFile)(path_1.default.join(dirPath, `${md.title_en || md.title}.${config.type}`), content, {
                 encoding: "utf-8",
                 flag: "w+",
             });

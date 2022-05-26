@@ -96,6 +96,9 @@ class MarkdownTo {
         console.time("解析Markdown");
         await this.parseMd(mds, this.config);
         console.timeEnd("解析Markdown");
+        // toc目录
+        if (this.config.toc)
+            await (0, menu_1.createMdToc)(mds);
         console.time("输出文件");
         await this.generateFile(mds, this.config);
         console.timeEnd("输出文件");

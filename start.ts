@@ -4,6 +4,7 @@ import { MarkdownTo } from "./index";
 const options: Config = {
 	ignores: [".git", "面试经历"],
 	type: "html",
+	toc: true,
 };
 const mdTo = new MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);
 

@@ -27,6 +27,7 @@ export interface Md {
 	createTime: Date;
 	updateTime: Date;
 	parseContent?: string;
+	toc?: string;
 }
 
 declare type Types = "vue" | "html" | "jsx" | "tsx";
