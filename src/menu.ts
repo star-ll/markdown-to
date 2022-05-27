@@ -17,11 +17,10 @@ export function handleToc(mds: Md[]) {
 				}
 				li = "\t" + li;
 			}
-			tocList[allCategory + md.title] =
+			const title = md.title_en || md.title;
+			tocList[allCategory + title] =
 				li +
-				`[${md.title}](${
-					allCategory + md.title.replace(/\s/g, "_") + "/"
-				})`;
+				`[${title}](${allCategory + title.replace(/\s/g, "_") + "/"})`;
 		}
 	}
 	return tocList;

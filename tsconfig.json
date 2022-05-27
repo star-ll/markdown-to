@@ -101,7 +101,7 @@
 		"type/global.d.ts",
 		"./start.ts",
 		"./index.ts",
-		"./preset/presetList.ts"
+		"src/presetList.ts"
 	],
 	"exclude": ["node_modules"]
 }

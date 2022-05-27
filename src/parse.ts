@@ -2,7 +2,6 @@ import { readFile, stat, readdir } from "fs/promises";
 import path from "path";
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js"; // https://highlightjs.org/
-import htmlEscaper from "html-escaper";
 
 // eslint-disable-next-line no-irregular-whitespace
 const HTML_ESCAPE_TEST_RE = /[&<>"{}]/;
@@ -43,11 +42,13 @@ export const markdownIt: any = new MarkdownIt({
 					"</code></pre>"
 				);
 			} catch (__) {
+				console.error("highlight error " + str);
+
 				//
 			}
 		}
 
-		return ""; // use external default escaping
+		return '<pre class="hljs"><code>' + escapeHtml(str) + "</code></pre>"; // use external default escaping
 	},
 });
 
@@ -84,16 +85,26 @@ export async function parseDir(files: string[], baseDir, config: Options) {
 				if (typeof config.translate !== "function") {
 					throw new Error("translate不是一个函数");
 				}
+				const translateDic = config.translateDic || {};
+				/** 翻译文件名*/
 				if (!/^[a-zA-z0-9_-]+$/.test(o.title)) {
 					const title = o.title;
-					const tran = await config.translate?.(o.title);
+					const tran =
+						translateDic[title] ||
+						(await config.translate?.(o.title));
 					o.title_en = tran?.replace(/\s/g, "_") || title;
+					!translateDic[title] && (translateDic[title] = tran);
 				}
+				/** 翻译目录*/
 				for (let i = 0; i < o.categories.length; i++) {
 					const category = o.categories[i];
 					if (!/^[a-zA-z0-9_-]+$/.test(category)) {
-						const tran = await config.translate?.(category);
+						const tran =
+							translateDic[category] ||
+							(await config.translate?.(category));
 						o.categories[i] = tran?.replace(/\s/g, "_") || category;
+						!translateDic[category] &&
+							(translateDic[category] = tran);
 					}
 				}
 			}
@@ -117,14 +128,6 @@ export async function parseMd(mdArr: Md[], config: Options) {
 				.render(content)
 				.replace(/\u200B/g, "")
 				.replace(/\u00a0/g, "");
-
-			// if (mdObj.parseContent && ["tsx", "jsx"].includes(config.type)) {
-			// 	console.log(true);
-
-			// 	mdObj.parseContent
-			// 		.replace(/<code>\{/g, "<code>{`")
-			// 		.replace(/\}<\/code>/, "`}</code>");
-			// }
 		}
 	}
 	return mdArr;

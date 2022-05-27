@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateFile = void 0;
 const path_1 = __importDefault(require("path"));
 const promises_1 = require("fs/promises");
-const presetList_1 = require("../preset/presetList");
+const presetList_1 = require("./presetList");
 async function generateFile(mdArr, config) {
     for (let i = 0; i < mdArr.length; i++) {
         const md = mdArr[i];

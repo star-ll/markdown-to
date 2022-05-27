@@ -1,6 +1,6 @@
 import path from "path";
 import { writeFile, mkdir, access } from "fs/promises";
-import { presetTemplate } from "../preset/presetList";
+import { presetTemplate } from "./presetList";
 
 export async function generateFile(mdArr: Md[], config: Options) {
 	for (let i = 0; i < mdArr.length; i++) {

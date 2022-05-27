@@ -18,13 +18,14 @@
 		"markdown",
 		"markdown-to"
 	],
+	"module": "build/index.js",
+	"types": "type/global.d.ts",
 	"author": "yujin321",
 	"license": "MIT",
 	"dependencies": {
 		"@vitalets/google-translate-api": "^8.0.0",
 		"commander": "^9.2.0",
 		"highlight.js": "^11.5.1",
-		"html-escaper": "^3.0.3",
 		"markdown-it": "^13.0.1"
 	},
 	"devDependencies": {

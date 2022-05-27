@@ -12,14 +12,20 @@ const menu_1 = require("./src/menu");
 const translate_1 = require("./src/translate");
 const parse_1 = require("./src/parse");
 const file_1 = require("./src/file");
-const presetList_1 = require("./preset/presetList");
+const presetList_1 = require("./src/presetList");
+const translate_json_1 = __importDefault(require("./cache/translate.json"));
 class MarkdownTo {
     constructor(rootDir, outDir, config = {}) {
         this.mds = [];
         this.handleToc = menu_1.handleToc;
-        // 解析rootDir，生成mds
+        /**
+         *  根据rootDir递归地读取markdown文件，将文件目录等信息转换成特定的对象结构Mds
+         *
+         * */
         this.parseDir = parse_1.parseDir;
+        /** 在Md对象基础上递归读取markdown内容并转换成html*/
         this.parseMd = parse_1.parseMd;
+        /** 将Mds按照原目录结构生成目标文件*/
         this.generateFile = file_1.generateFile;
         const res = (0, fs_1.statSync)(rootDir);
         try {
@@ -46,6 +52,7 @@ class MarkdownTo {
             translate: typeof config.translate === "function"
                 ? config.translate
                 : translate_1.translate,
+            translateDic: translate_json_1.default,
         };
         if (["tsx", "jsx"].includes(this.config.type)) {
             parse_1.markdownIt.use(markdown_it_jsx_1.default);
@@ -97,6 +104,13 @@ class MarkdownTo {
         console.time("解析Markdown");
         await this.parseMd(mds, this.config);
         console.timeEnd("解析Markdown");
+        // 将翻译的字段缓存
+        if (this.config.isTranslate) {
+            (0, promises_1.writeFile)(path_1.default.resolve("./cache/translate.json"), JSON.stringify(this.config.translateDic), {
+                flag: "w+",
+                encoding: "utf-8",
+            });
+        }
         // toc目录
         if (this.config.toc)
             await (0, menu_1.createMdToc)(mds);
