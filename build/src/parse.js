@@ -8,6 +8,27 @@ const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const markdown_it_1 = __importDefault(require("markdown-it"));
 const highlight_js_1 = __importDefault(require("highlight.js")); // https://highlightjs.org/
+// eslint-disable-next-line no-irregular-whitespace
+const HTML_ESCAPE_TEST_RE = /[&<>"{}]/;
+// eslint-disable-next-line no-irregular-whitespace
+const HTML_ESCAPE_REPLACE_RE = /[&<>"{}]/g;
+const HTML_REPLACEMENTS = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "{": "&#123",
+    "}": "&#125",
+};
+function replaceUnsafeChar(ch) {
+    return HTML_REPLACEMENTS[ch];
+}
+function escapeHtml(str) {
+    if (HTML_ESCAPE_TEST_RE.test(str)) {
+        return str.replace(HTML_ESCAPE_REPLACE_RE, replaceUnsafeChar);
+    }
+    return str;
+}
 exports.markdownIt = new markdown_it_1.default({
     typographer: true,
     linkify: true,
@@ -16,7 +37,12 @@ exports.markdownIt = new markdown_it_1.default({
     highlight: function (str, lang) {
         if (lang && highlight_js_1.default.getLanguage(lang)) {
             try {
-                return highlight_js_1.default.highlight(str, { language: lang }).value;
+                return ('<pre class="hljs"><code>' +
+                    highlight_js_1.default.highlight(escapeHtml(str), {
+                        language: lang,
+                        ignoreIllegals: true,
+                    }).value +
+                    "</code></pre>");
             }
             catch (__) {
                 //
@@ -52,6 +78,9 @@ async function parseDir(files, baseDir, config) {
                 updateTime: fileStat.mtime,
             };
             if (config.isTranslate === true) {
+                if (typeof config.translate !== "function") {
+                    throw new Error("translate不是一个函数");
+                }
                 if (!/^[a-zA-z0-9_-]+$/.test(o.title)) {
                     const title = o.title;
                     const tran = await config.translate?.(o.title);
@@ -82,14 +111,16 @@ async function parseMd(mdArr, config) {
             const content = await (0, promises_1.readFile)(mdObj.path, {
                 encoding: "utf-8",
             });
-            mdObj.parseContent = JSON.stringify(exports.markdownIt.render(content));
-            if (["tsx", "jsx"].includes(config.type)) {
-                // jsx中转义{}，替换class
-                mdObj.parseContent = mdObj.parseContent
-                    .replace(/\{/g, "&#123")
-                    .replace(/\}/g, "&#125")
-                    .replace(/class/g, "className");
-            }
+            mdObj.parseContent = exports.markdownIt
+                .render(content)
+                .replace(/\u200B/g, "")
+                .replace(/\u00a0/g, "");
+            // if (mdObj.parseContent && ["tsx", "jsx"].includes(config.type)) {
+            // 	console.log(true);
+            // 	mdObj.parseContent
+            // 		.replace(/<code>\{/g, "<code>{`")
+            // 		.replace(/\}<\/code>/, "`}</code>");
+            // }
         }
     }
     return mdArr;

@@ -24,6 +24,7 @@
 		"@vitalets/google-translate-api": "^8.0.0",
 		"commander": "^9.2.0",
 		"highlight.js": "^11.5.1",
+		"html-escaper": "^3.0.3",
 		"markdown-it": "^13.0.1"
 	},
 	"devDependencies": {
@@ -32,6 +33,7 @@
 		"@typescript-eslint/eslint-plugin": "^5.26.0",
 		"@typescript-eslint/parser": "^5.26.0",
 		"eslint": "^8.16.0",
+		"markdown-it-jsx": "^1.1.0",
 		"typescript": "^4.6.4"
 	}
 }

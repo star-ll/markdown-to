@@ -7,10 +7,12 @@ exports.MarkdownTo = void 0;
 const path_1 = __importDefault(require("path"));
 const fs_1 = require("fs");
 const promises_1 = require("fs/promises");
+const markdown_it_jsx_1 = __importDefault(require("markdown-it-jsx"));
 const menu_1 = require("./src/menu");
 const translate_1 = require("./src/translate");
 const parse_1 = require("./src/parse");
 const file_1 = require("./src/file");
+const presetList_1 = require("./preset/presetList");
 class MarkdownTo {
     constructor(rootDir, outDir, config = {}) {
         this.mds = [];
@@ -44,11 +46,10 @@ class MarkdownTo {
             translate: typeof config.translate === "function"
                 ? config.translate
                 : translate_1.translate,
-            template: (0, fs_1.readFileSync)(path_1.default.resolve(__dirname, `../preset/preset.${config.type || "vue"}`), {
-                encoding: "utf-8",
-            }),
         };
-        this.template = this.config.template;
+        if (["tsx", "jsx"].includes(this.config.type)) {
+            parse_1.markdownIt.use(markdown_it_jsx_1.default);
+        }
     }
     async render() {
         await this.check();
@@ -76,7 +77,7 @@ class MarkdownTo {
             list += t + "\n";
         }
         list = parse_1.markdownIt.render(list);
-        (0, fs_1.writeFileSync)(`./dist/toc.${this.config.type}`, this.template.replace("{- html -}", list || ""), {
+        (0, fs_1.writeFileSync)(`./dist/toc.${this.config.type}`, (0, presetList_1.presetTemplate)(list, this.config.type), {
             flag: "w+",
             encoding: "utf-8",
         });

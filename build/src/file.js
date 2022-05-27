@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateFile = void 0;
 const path_1 = __importDefault(require("path"));
 const promises_1 = require("fs/promises");
+const presetList_1 = require("../preset/presetList");
 async function generateFile(mdArr, config) {
     for (let i = 0; i < mdArr.length; i++) {
         const md = mdArr[i];
@@ -26,14 +27,14 @@ async function generateFile(mdArr, config) {
                     await (0, promises_1.mkdir)(dirPath);
                 }
             }
-            let content = config.template;
-            content = content.replace("{- html -}", md.parseContent ? JSON.parse(md.parseContent) : "");
+            let parseContent = md.parseContent;
             // toc
             if (config.toc === true ||
                 (Array.isArray(config.toc) && config.toc.includes(md.title))) {
                 if (md.toc)
-                    content = md.toc + "<br />" + content;
+                    parseContent = md.toc + "\n" + parseContent;
             }
+            const content = (0, presetList_1.presetTemplate)(parseContent || "", config.type);
             await (0, promises_1.writeFile)(path_1.default.join(dirPath, `${md.title_en || md.title}.${config.type}`), content, {
                 encoding: "utf-8",
                 flag: "w+",

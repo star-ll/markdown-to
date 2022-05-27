@@ -10,7 +10,6 @@ declare interface Config {
 declare interface Options {
 	rootDir: string;
 	outDir: string;
-	template: string;
 	type: Types;
 	md: RegExp;
 	ignores: string[];

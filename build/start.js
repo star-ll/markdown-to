@@ -14,6 +14,4 @@ if (argv.includes("--translate")) {
 if (argv.includes("--toc-file")) {
     mdTo.tocFile();
 }
-else {
-    mdTo.render();
-}
+mdTo.render();

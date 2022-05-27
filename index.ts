@@ -1,14 +1,14 @@
 import path from "path";
 import { writeFileSync, readFileSync, statSync } from "fs";
 import { mkdir, readdir, access, rm } from "fs/promises";
-
+import jsx from "markdown-it-jsx";
 import { createMdToc, handleToc } from "./src/menu";
 import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
 import { generateFile } from "./src/file";
+import { presetTemplate } from "./preset/presetList";
 
 export class MarkdownTo {
-	private template: string;
 	public mds: Md[] = [];
 	private outBaseDir: string;
 	private outDir: string;
@@ -42,18 +42,11 @@ export class MarkdownTo {
 				typeof config.translate === "function"
 					? config.translate
 					: translate,
-			template: readFileSync(
-				path.resolve(
-					__dirname,
-					`../preset/preset.${config.type || "vue"}`
-				),
-				{
-					encoding: "utf-8",
-				}
-			),
 		};
 
-		this.template = this.config.template;
+		if (["tsx", "jsx"].includes(this.config.type)) {
+			markdownIt.use(jsx);
+		}
 	}
 	public async render() {
 		await this.check();
@@ -89,7 +82,7 @@ export class MarkdownTo {
 		list = markdownIt.render(list);
 		writeFileSync(
 			`./dist/toc.${this.config.type}`,
-			this.template.replace("{- html -}", list || ""),
+			presetTemplate(list, this.config.type),
 			{
 				flag: "w+",
 				encoding: "utf-8",

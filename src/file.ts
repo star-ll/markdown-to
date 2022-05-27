@@ -1,5 +1,6 @@
 import path from "path";
 import { writeFile, mkdir, access } from "fs/promises";
+import { presetTemplate } from "../preset/presetList";
 
 export async function generateFile(mdArr: Md[], config: Options) {
 	for (let i = 0; i < mdArr.length; i++) {
@@ -19,19 +20,16 @@ export async function generateFile(mdArr: Md[], config: Options) {
 					await mkdir(dirPath);
 				}
 			}
-			let content = config.template;
-			content = content.replace(
-				"{- html -}",
-				md.parseContent ? JSON.parse(md.parseContent) : ""
-			);
-
+			let parseContent = md.parseContent;
 			// toc
 			if (
 				config.toc === true ||
 				(Array.isArray(config.toc) && config.toc.includes(md.title))
 			) {
-				if (md.toc) content = md.toc + "<br />" + content;
+				if (md.toc) parseContent = md.toc + "\n" + parseContent;
 			}
+
+			const content = presetTemplate(parseContent || "", config.type);
 
 			await writeFile(
 				path.join(dirPath, `${md.title_en || md.title}.${config.type}`),
