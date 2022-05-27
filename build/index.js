@@ -15,9 +15,14 @@ const file_1 = require("./src/file");
 const presetList_1 = require("./src/presetList");
 const translate_json_1 = __importDefault(require("./cache/translate.json"));
 class MarkdownTo {
+    /**
+     *
+     * @param rootDir 根目录
+     * @param outDir 输出目录
+     * @param config 配置对象 {@link Config}
+     */
     constructor(rootDir, outDir, config = {}) {
         this.mds = [];
-        this.handleToc = menu_1.handleToc;
         /**
          *  根据rootDir递归地读取markdown文件，将文件目录等信息转换成特定的对象结构Mds
          *
@@ -27,6 +32,7 @@ class MarkdownTo {
         this.parseMd = parse_1.parseMd;
         /** 将Mds按照原目录结构生成目标文件*/
         this.generateFile = file_1.generateFile;
+        this.handleToc = menu_1.handleToc;
         const res = (0, fs_1.statSync)(rootDir);
         try {
             if (!res?.isDirectory()) {
@@ -97,10 +103,10 @@ class MarkdownTo {
         console.time("解析文件信息");
         const mds = await this.parseDir(fileNames, this.rootDir, this.config);
         console.timeEnd("解析文件信息");
-        console.time("输出map.json");
+        console.time("输出mds.json");
         this.mds.push(...mds);
-        (0, fs_1.writeFileSync)("./map.json", JSON.stringify(this.mds));
-        console.timeEnd("输出map.json");
+        (0, fs_1.writeFileSync)(path_1.default.resolve("./cache/mds.json"), JSON.stringify(this.mds));
+        console.timeEnd("输出mds.json");
         console.time("解析Markdown");
         await this.parseMd(mds, this.config);
         console.timeEnd("解析Markdown");
