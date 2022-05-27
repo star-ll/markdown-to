@@ -15,6 +15,25 @@ export class MarkdownTo {
 	private outDir: string;
 	private rootDir: string;
 	private config: Options;
+
+	/**
+	 *  根据rootDir递归地读取markdown文件，将文件目录等信息转换成特定的对象结构Mds
+	 *
+	 * */
+	private parseDir = parseDir;
+
+	/** 在Md对象基础上递归读取markdown内容并转换成html*/
+	private parseMd = parseMd;
+
+	/** 将Mds按照原目录结构生成目标文件*/
+	private generateFile = generateFile;
+
+	/**
+	 *
+	 * @param rootDir 根目录
+	 * @param outDir 输出目录
+	 * @param config 配置对象 {@link Config}
+	 */
 	constructor(rootDir: string, outDir: string, config: Config = {}) {
 		const res = statSync(rootDir);
 		try {
@@ -101,10 +120,13 @@ export class MarkdownTo {
 		const mds = await this.parseDir(fileNames, this.rootDir, this.config);
 		console.timeEnd("解析文件信息");
 
-		console.time("输出map.json");
+		console.time("输出mds.json");
 		this.mds.push(...mds);
-		writeFileSync("./map.json", JSON.stringify(this.mds));
-		console.timeEnd("输出map.json");
+		writeFileSync(
+			path.resolve("./cache/mds.json"),
+			JSON.stringify(this.mds)
+		);
+		console.timeEnd("输出mds.json");
 
 		console.time("解析Markdown");
 		await this.parseMd(mds, this.config);
@@ -129,16 +151,4 @@ export class MarkdownTo {
 		await this.generateFile(mds, this.config);
 		console.timeEnd("输出文件");
 	}
-
-	/**
-	 *  根据rootDir递归地读取markdown文件，将文件目录等信息转换成特定的对象结构Mds
-	 *
-	 * */
-	private parseDir = parseDir;
-
-	/** 在Md对象基础上递归读取markdown内容并转换成html*/
-	private parseMd = parseMd;
-
-	/** 将Mds按照原目录结构生成目标文件*/
-	private generateFile = generateFile;
 }

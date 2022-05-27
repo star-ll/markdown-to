@@ -1,18 +1,18 @@
 declare interface Config {
-	/**
-	 * 转换文件类型
-	 * html | vue | jsx | tsx
+	/** @property
+	 * { html | vue | jsx | tsx }
+	 * 转换的目标文件类型
 	 * */
 	type?: Types;
-	/**匹配markdown的正则表达式 */
+	/** @property 匹配markdown的正则表达式 */
 	md?: RegExp;
-	/**忽略的文件或目录  */
+	/** @property 忽略的文件或目录  */
 	ignores?: string[];
-	/**是否翻译名称与目录  */
+	/** @property 是否翻译名称与目录  */
 	isTranslate?: boolean;
-	/** 自定义翻译函数*/
+	/** @property  自定义翻译函数*/
 	translate?: (q: string) => Promise<string | void> | string;
-	/** 实现toc文章目录*/
+	/** @property 实现toc文章目录*/
 	toc?: string[] | boolean;
 }
 
