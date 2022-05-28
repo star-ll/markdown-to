@@ -7,7 +7,7 @@ import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
 import { generateFile } from "./src/file";
 import { presetTemplate, presetHightLight } from "./src/presetList";
-import { transformStyle } from "./src/util";
+import { transformStyle, escapeHtml } from "./src/util";
 
 let translateDic;
 try {
@@ -183,19 +183,17 @@ export class MarkdownTo {
 				env,
 				slf
 			) {
-				const token = tokens[idx];
-				let attr = slf.renderAttrs(token);
-				if (isJSX) {
-					tokens[idx].content = `{\`${tokens[idx].content.replace(
-						/`/g,
-						"\\`"
-					)}\`}`;
-					attr = attr
-						.replace(/class/g, "className")
-						.replace(/style=(['"])(.*?)\1/g, (match) =>
-							transformStyle(match.slice(7, -1))
-						);
-				}
+				let attr = slf.renderAttrs(tokens[idx]);
+				tokens[idx].content = `{\`${tokens[idx].content.replace(
+					/`/g,
+					"\\`"
+				)}\`}`;
+				attr = attr
+					.replace(/class/g, "className")
+					.replace(/style=(['"])(.*?)\1/g, (match) =>
+						transformStyle(match.slice(7, -1))
+					);
+
 				return "<code" + attr + ">" + tokens[idx].content + "</code>";
 			};
 
@@ -207,22 +205,43 @@ export class MarkdownTo {
 				env,
 				slf
 			) {
-				if (isJSX) {
-					const content = tokens[idx].content;
-
-					tokens[idx].content =
-						"{`" + content.replace(/`/g, "\\`") + "`}";
-
-					return fence(tokens, idx, options, env, slf)
-						.replace(/class="/g, 'className="')
-						.replace(/style=(['"])(.*?)\1/g, (match) =>
-							transformStyle(match.slice(7, -1))
+				tokens[idx].content =
+					"{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
+				return fence(tokens, idx, options, env, slf)
+					.replace(/class="/g, 'className="')
+					.replace(/style=(['"])(.*?)\1/g, (match) =>
+						transformStyle(match.slice(7, -1))
+					);
+			};
+			/** 解析html属性 */
+			markdownIt.renderer.renderAttrs = function renderAttrs(token) {
+				let i, l, result;
+				if (!token.attrs) {
+					return "";
+				}
+				result = "";
+				for (i = 0, l = token.attrs.length; i < l; i++) {
+					const key = token.attrs[i][0];
+					let value = token.attrs[i][1];
+					if (key === "style") {
+						value = JSON.stringify(
+							transformStyle(escapeHtml(value))
 						);
+						result += " " + escapeHtml(key) + "=" + `{${value}}`;
+					} else {
+						result +=
+							" " +
+							escapeHtml(key) +
+							'="' +
+							escapeHtml(value) +
+							'"';
+					}
 				}
 
-				return fence(tokens, idx, options, env, slf);
+				return result;
 			};
-			console.log(markdownIt.renderer.rules);
+			// console.log(markdownIt.renderer.renderAttrs);
+			// console.log(markdownIt.renderer.renderAttrs.toString());
 		}
 	}
 }

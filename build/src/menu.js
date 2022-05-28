@@ -19,7 +19,7 @@ function handleToc(mds, options = {}) {
                 const category = categories[j];
                 allCategory += category + "/";
                 if (!tocList[allCategory]) {
-                    tocList[allCategory] = li + category;
+                    tocList[allCategory] = li + (md.categories[j] || category);
                 }
                 li = "\t" + li;
             }

@@ -15,7 +15,7 @@ export function handleToc(mds: Md[], options: { prefixUrl?: string } = {}) {
 				const category = categories[j];
 				allCategory += category + "/";
 				if (!tocList[allCategory]) {
-					tocList[allCategory] = li + category;
+					tocList[allCategory] = li + (md.categories[j] || category);
 				}
 				li = "\t" + li;
 			}

@@ -151,29 +151,48 @@ class MarkdownTo {
             // 	return "<pre" + attr + "><code>" + content + "</code></pre>\n";
             // };
             parse_1.markdownIt.renderer.rules.code_inline = function (tokens, idx, options, env, slf) {
-                const token = tokens[idx];
-                let attr = slf.renderAttrs(token);
-                if (isJSX) {
-                    tokens[idx].content = `{\`${tokens[idx].content.replace(/`/g, "\\`")}\`}`;
-                    attr = attr
-                        .replace(/class/g, "className")
-                        .replace(/style=(['"])(.*?)\1/g, (match) => (0, util_1.transformStyle)(match.slice(7, -1)));
-                }
+                let attr = slf.renderAttrs(tokens[idx]);
+                tokens[idx].content = `{\`${tokens[idx].content.replace(/`/g, "\\`")}\`}`;
+                attr = attr
+                    .replace(/class/g, "className")
+                    .replace(/style=(['"])(.*?)\1/g, (match) => (0, util_1.transformStyle)(match.slice(7, -1)));
                 return "<code" + attr + ">" + tokens[idx].content + "</code>";
             };
             const fence = parse_1.markdownIt.renderer.rules.fence;
             parse_1.markdownIt.renderer.rules.fence = function escape_renderer(tokens, idx, options, env, slf) {
-                if (isJSX) {
-                    const content = tokens[idx].content;
-                    tokens[idx].content =
-                        "{`" + content.replace(/`/g, "\\`") + "`}";
-                    return fence(tokens, idx, options, env, slf)
-                        .replace(/class="/g, 'className="')
-                        .replace(/style=(['"])(.*?)\1/g, (match) => (0, util_1.transformStyle)(match.slice(7, -1)));
-                }
-                return fence(tokens, idx, options, env, slf);
+                tokens[idx].content =
+                    "{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
+                return fence(tokens, idx, options, env, slf)
+                    .replace(/class="/g, 'className="')
+                    .replace(/style=(['"])(.*?)\1/g, (match) => (0, util_1.transformStyle)(match.slice(7, -1)));
             };
-            console.log(parse_1.markdownIt.renderer.rules);
+            /** 解析html属性 */
+            parse_1.markdownIt.renderer.renderAttrs = function renderAttrs(token) {
+                let i, l, result;
+                if (!token.attrs) {
+                    return "";
+                }
+                result = "";
+                for (i = 0, l = token.attrs.length; i < l; i++) {
+                    const key = token.attrs[i][0];
+                    let value = token.attrs[i][1];
+                    if (key === "style") {
+                        value = JSON.stringify((0, util_1.transformStyle)((0, util_1.escapeHtml)(value)));
+                        result += " " + (0, util_1.escapeHtml)(key) + "=" + `{${value}}`;
+                    }
+                    else {
+                        result +=
+                            " " +
+                                (0, util_1.escapeHtml)(key) +
+                                '="' +
+                                (0, util_1.escapeHtml)(value) +
+                                '"';
+                    }
+                }
+                return result;
+            };
+            // console.log(markdownIt.renderer.renderAttrs);
+            // console.log(markdownIt.renderer.renderAttrs.toString());
         }
     }
 }
