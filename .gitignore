@@ -1,4 +1,5 @@
 dist/
 node_modules/
 test/
-cache/*
+cache/mds.json
+cache/translate.json
