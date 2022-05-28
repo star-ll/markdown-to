@@ -6,8 +6,19 @@ import { createMdToc, handleToc } from "./src/menu";
 import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
 import { generateFile } from "./src/file";
-import { presetTemplate } from "./src/presetList";
-import translateDic from "./cache/translate.json";
+import { presetTemplate, presetHightLight } from "./src/presetList";
+import { transformStyle } from "./src/util";
+
+let translateDic;
+try {
+	const translateDictionary = readFileSync(
+		path.resolve("./cache/translate.json"),
+		{ encoding: "utf-8" }
+	);
+	translateDic = JSON.parse(translateDictionary);
+} catch (__) {
+	translateDic = {};
+}
 
 export class MarkdownTo {
 	public mds: Md[] = [];
@@ -15,18 +26,6 @@ export class MarkdownTo {
 	private outDir: string;
 	private rootDir: string;
 	private config: Options;
-
-	/**
-	 *  根据rootDir递归地读取markdown文件，将文件目录等信息转换成特定的对象结构Mds
-	 *
-	 * */
-	private parseDir = parseDir;
-
-	/** 在Md对象基础上递归读取markdown内容并转换成html*/
-	private parseMd = parseMd;
-
-	/** 将Mds按照原目录结构生成目标文件*/
-	private generateFile = generateFile;
 
 	/**
 	 *
@@ -62,12 +61,10 @@ export class MarkdownTo {
 				typeof config.translate === "function"
 					? config.translate
 					: translate,
-			translateDic: translateDic,
+			translateDic: translateDic || {},
 		};
 
-		if (["tsx", "jsx"].includes(this.config.type)) {
-			markdownIt.use(jsx);
-		}
+		this.mdRules();
 	}
 	public async render() {
 		await this.check();
@@ -82,20 +79,19 @@ export class MarkdownTo {
 			.catch(() => mkdir(this.outDir));
 	}
 
-	private handleToc = handleToc;
-	public async tocFile() {
+	/**
+	 *
+	 * @param options  配置文件
+	 */
+	public async tocFile(options: { prefixUrl?: string } = {}) {
 		if (!this.mds || this.mds?.length === 0) {
 			const fileNames = await readdir(this.rootDir);
 			if (!Array.isArray(fileNames) || fileNames?.length <= 0) {
 				throw new Error("空目录");
 			}
-			this.mds = await this.parseDir(
-				fileNames,
-				this.rootDir,
-				this.config
-			);
+			this.mds = await parseDir(fileNames, this.rootDir, this.config);
 		}
-		const tocList = await this.handleToc(this.mds);
+		const tocList = await handleToc(this.mds, options);
 		let list = "";
 		for (const t of Object.values(tocList)) {
 			list += t + "\n";
@@ -117,7 +113,7 @@ export class MarkdownTo {
 			throw new Error("空目录");
 		}
 		console.time("解析文件信息");
-		const mds = await this.parseDir(fileNames, this.rootDir, this.config);
+		const mds = await parseDir(fileNames, this.rootDir, this.config);
 		console.timeEnd("解析文件信息");
 
 		console.time("输出mds.json");
@@ -129,14 +125,14 @@ export class MarkdownTo {
 		console.timeEnd("输出mds.json");
 
 		console.time("解析Markdown");
-		await this.parseMd(mds, this.config);
+		await parseMd(mds, this.config);
 		console.timeEnd("解析Markdown");
 
 		// 将翻译的字段缓存
 		if (this.config.isTranslate) {
 			writeFile(
 				path.resolve("./cache/translate.json"),
-				JSON.stringify(this.config.translateDic),
+				JSON.stringify(this.config.translateDic || {}),
 				{
 					flag: "w+",
 					encoding: "utf-8",
@@ -148,7 +144,85 @@ export class MarkdownTo {
 		if (this.config.toc) await createMdToc(mds);
 
 		console.time("输出文件");
-		await this.generateFile(mds, this.config);
+		await generateFile(mds, this.config);
 		console.timeEnd("输出文件");
+	}
+
+	/**
+	 * @function 处理markdown解析规则
+	 */
+	private mdRules() {
+		// 代码高亮
+		markdownIt.set({ highlight: presetHightLight(this.config.type) });
+
+		// 转换规则
+		if (["tsx", "jsx"].includes(this.config.type)) {
+			const isJSX = ["tsx", "jsx"].includes(this.config.type);
+			// markdownIt.renderer.rules.code_block = function (
+			// 	tokens,
+			// 	idx,
+			// 	option,
+			// 	env,
+			// 	slf
+			// ) {
+			// 	const token = tokens[idx];
+			// 	let content = escapeHtml(tokens[idx].content);
+			// 	let attr = slf.renderAttrs(token);
+			// 	if (isJSX) {
+			// 		content = `{\`${content}\`}`;
+			// 		attr = attr
+			// 			.replace(/class/g, "className")
+			// 			.replace(/style=(['"]).*?\1/g, "");
+			// 	}
+			// 	return "<pre" + attr + "><code>" + content + "</code></pre>\n";
+			// };
+			markdownIt.renderer.rules.code_inline = function (
+				tokens,
+				idx,
+				options,
+				env,
+				slf
+			) {
+				const token = tokens[idx];
+				let attr = slf.renderAttrs(token);
+				if (isJSX) {
+					tokens[idx].content = `{\`${tokens[idx].content.replace(
+						/`/g,
+						"\\`"
+					)}\`}`;
+					attr = attr
+						.replace(/class/g, "className")
+						.replace(/style=(['"])(.*?)\1/g, (match) =>
+							transformStyle(match.slice(7, -1))
+						);
+				}
+				return "<code" + attr + ">" + tokens[idx].content + "</code>";
+			};
+
+			const fence = markdownIt.renderer.rules.fence;
+			markdownIt.renderer.rules.fence = function escape_renderer(
+				tokens,
+				idx,
+				options,
+				env,
+				slf
+			) {
+				if (isJSX) {
+					const content = tokens[idx].content;
+
+					tokens[idx].content =
+						"{`" + content.replace(/`/g, "\\`") + "`}";
+
+					return fence(tokens, idx, options, env, slf)
+						.replace(/class="/g, 'className="')
+						.replace(/style=(['"])(.*?)\1/g, (match) =>
+							transformStyle(match.slice(7, -1))
+						);
+				}
+
+				return fence(tokens, idx, options, env, slf);
+			};
+			console.log(markdownIt.renderer.rules);
+		}
 	}
 }

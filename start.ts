@@ -1,7 +1,7 @@
 import { MarkdownTo } from "./index";
 
 const options: Config = {
-	ignores: [".git", "面试经历"],
+	ignores: [".git"],
 	type: "tsx",
 	toc: true,
 };
@@ -14,7 +14,7 @@ if (argv.includes("--translate")) {
 }
 
 if (argv.includes("--toc-file")) {
-	mdTo.tocFile();
+	mdTo.tocFile({ prefixUrl: "/articles/" });
 }
 
 mdTo.render();

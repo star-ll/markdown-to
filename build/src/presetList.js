@@ -1,6 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.presetTemplate = void 0;
+exports.presetHightLight = exports.presetTemplate = void 0;
+const util_1 = require("./util");
+const highlight_js_1 = __importDefault(require("highlight.js")); // https://highlightjs.org/
 function presetTemplate(content, type) {
     const presetList = {
         html: `<!DOCTYPE html>
@@ -33,3 +38,44 @@ function presetTemplate(content, type) {
     return presetList[type];
 }
 exports.presetTemplate = presetTemplate;
+function presetHightLight(type) {
+    if (["tsx", "jsx"].includes(type)) {
+        return function (str, lang) {
+            if (lang && highlight_js_1.default.getLanguage(lang)) {
+                try {
+                    return ('<pre class="hljs"><code>{`' +
+                        highlight_js_1.default
+                            .highlight(str.slice(2, -2), {
+                            language: lang,
+                            ignoreIllegals: true,
+                        })
+                            .value.replace(/[^\\]`/g, "\\`") +
+                        "`}</code></pre>");
+                }
+                catch (err) {
+                    console.error("highlight error\n" + err);
+                }
+            }
+            return ('<pre class="hljs"><code>{`' +
+                `${(0, util_1.escapeHtml)(str).replace(/[^\\]`/g, "\\`")}` +
+                "`}</code></pre>"); // use external default escaping
+        };
+    }
+    return function (str, lang) {
+        if (lang && highlight_js_1.default.getLanguage(lang)) {
+            try {
+                return ('<pre class="hljs"><code>' +
+                    highlight_js_1.default.highlight(str, {
+                        language: lang,
+                        ignoreIllegals: true,
+                    }).value +
+                    "</code></pre>");
+            }
+            catch (__) {
+                //
+            }
+        }
+        return '<pre class="hljs"><code>' + (0, util_1.escapeHtml)(str) + "</code></pre>";
+    };
+}
+exports.presetHightLight = presetHightLight;

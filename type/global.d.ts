@@ -32,6 +32,7 @@ declare interface Options {
 declare interface Md {
 	path: string;
 	categories: string[];
+	categories_en?: string[];
 	title: string;
 	title_en?: string;
 	createTime: Date;

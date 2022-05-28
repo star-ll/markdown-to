@@ -2,13 +2,14 @@ import path from "path";
 import { writeFile, mkdir, access } from "fs/promises";
 import { presetTemplate } from "./presetList";
 
+/** 将Mds按照原目录结构生成目标文件*/
 export async function generateFile(mdArr: Md[], config: Options) {
 	for (let i = 0; i < mdArr.length; i++) {
 		const md = mdArr[i];
 		if (Array.isArray(md)) {
 			await generateFile(md, config);
 		} else {
-			const categories = md.categories;
+			const categories = md.categories_en || md.categories;
 			// 创建目录
 			let dirPath = path.resolve(config.outDir);
 			for (let i = 0; i < categories.length; i++) {
@@ -30,7 +31,6 @@ export async function generateFile(mdArr: Md[], config: Options) {
 			}
 
 			const content = presetTemplate(parseContent || "", config.type);
-
 			await writeFile(
 				path.join(dirPath, `${md.title_en || md.title}.${config.type}`),
 				content,

@@ -7,6 +7,7 @@ exports.generateFile = void 0;
 const path_1 = __importDefault(require("path"));
 const promises_1 = require("fs/promises");
 const presetList_1 = require("./presetList");
+/** 将Mds按照原目录结构生成目标文件*/
 async function generateFile(mdArr, config) {
     for (let i = 0; i < mdArr.length; i++) {
         const md = mdArr[i];
@@ -14,7 +15,7 @@ async function generateFile(mdArr, config) {
             await generateFile(md, config);
         }
         else {
-            const categories = md.categories;
+            const categories = md.categories_en || md.categories;
             // 创建目录
             let dirPath = path_1.default.resolve(config.outDir);
             for (let i = 0; i < categories.length; i++) {

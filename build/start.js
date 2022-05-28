@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const options = {
-    ignores: [".git", "面试经历"],
+    ignores: [".git"],
     type: "tsx",
     toc: true,
 };
@@ -12,6 +12,6 @@ if (argv.includes("--translate")) {
     options.isTranslate = true;
 }
 if (argv.includes("--toc-file")) {
-    mdTo.tocFile();
+    mdTo.tocFile({ prefixUrl: "/articles/" });
 }
 mdTo.render();

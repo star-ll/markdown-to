@@ -1,3 +1,6 @@
+import { escapeHtml } from "./util";
+import hljs from "highlight.js"; // https://highlightjs.org/
+
 export function presetTemplate(content: string, type: string) {
 	const presetList = {
 		html: `<!DOCTYPE html>
@@ -29,4 +32,50 @@ export function presetTemplate(content: string, type: string) {
 	};
 
 	return presetList[type];
+}
+
+export function presetHightLight(type: string) {
+	if (["tsx", "jsx"].includes(type)) {
+		return function (str, lang) {
+			if (lang && hljs.getLanguage(lang)) {
+				try {
+					return (
+						'<pre class="hljs"><code>{`' +
+						hljs
+							.highlight(str.slice(2, -2), {
+								language: lang,
+								ignoreIllegals: true,
+							})
+							.value.replace(/[^\\]`/g, "\\`") +
+						"`}</code></pre>"
+					);
+				} catch (err) {
+					console.error("highlight error\n" + err);
+				}
+			}
+			return (
+				'<pre class="hljs"><code>{`' +
+				`${escapeHtml(str).replace(/[^\\]`/g, "\\`")}` +
+				"`}</code></pre>"
+			); // use external default escaping
+		};
+	}
+	return function (str, lang) {
+		if (lang && hljs.getLanguage(lang)) {
+			try {
+				return (
+					'<pre class="hljs"><code>' +
+					hljs.highlight(str, {
+						language: lang,
+						ignoreIllegals: true,
+					}).value +
+					"</code></pre>"
+				);
+			} catch (__) {
+				//
+			}
+		}
+
+		return '<pre class="hljs"><code>' + escapeHtml(str) + "</code></pre>";
+	};
 }

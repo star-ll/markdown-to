@@ -1,58 +1,18 @@
 import { readFile, stat, readdir } from "fs/promises";
 import path from "path";
 import MarkdownIt from "markdown-it";
-import hljs from "highlight.js"; // https://highlightjs.org/
-
-// eslint-disable-next-line no-irregular-whitespace
-const HTML_ESCAPE_TEST_RE = /[&<>"{}]/;
-// eslint-disable-next-line no-irregular-whitespace
-const HTML_ESCAPE_REPLACE_RE = /[&<>"{}]/g;
-const HTML_REPLACEMENTS = {
-	"&": "&amp;",
-	"<": "&lt;",
-	">": "&gt;",
-	'"': "&quot;",
-	"{": "&#123",
-	"}": "&#125",
-};
-function replaceUnsafeChar(ch) {
-	return HTML_REPLACEMENTS[ch];
-}
-function escapeHtml(str) {
-	if (HTML_ESCAPE_TEST_RE.test(str)) {
-		return str.replace(HTML_ESCAPE_REPLACE_RE, replaceUnsafeChar);
-	}
-	return str;
-}
+import { chineseRegex, escapeHtml } from "./util";
 
 export const markdownIt: any = new MarkdownIt({
 	typographer: true,
 	linkify: true,
 	langPrefix: "mdto-",
 	xhtmlOut: true,
-	highlight: function (str, lang) {
-		if (lang && hljs.getLanguage(lang)) {
-			try {
-				return (
-					'<pre class="hljs"><code>' +
-					hljs.highlight(escapeHtml(str), {
-						language: lang,
-						ignoreIllegals: true,
-					}).value +
-					"</code></pre>"
-				);
-			} catch (__) {
-				console.error("highlight error " + str);
-
-				//
-			}
-		}
-
-		return '<pre class="hljs"><code>' + escapeHtml(str) + "</code></pre>"; // use external default escaping
-	},
 });
 
-// 解析rootDir，生成mds
+/**
+ *  根据rootDir递归地读取markdown文件，将文件目录等信息转换成特定的对象结构Mds
+ * */
 export async function parseDir(files: string[], baseDir, config: Options) {
 	const md: any[] = [];
 	for (let i = 0; i < files.length; i++) {
@@ -87,7 +47,7 @@ export async function parseDir(files: string[], baseDir, config: Options) {
 				}
 				const translateDic = config.translateDic || {};
 				/** 翻译文件名*/
-				if (!/^[a-zA-z0-9_-]+$/.test(o.title)) {
+				if (chineseRegex.test(o.title)) {
 					const title = o.title;
 					const tran =
 						translateDic[title] ||
@@ -96,15 +56,21 @@ export async function parseDir(files: string[], baseDir, config: Options) {
 					!translateDic[title] && (translateDic[title] = tran);
 				}
 				/** 翻译目录*/
+				if (!Array.isArray(o.categories_en)) {
+					o.categories_en = [];
+				}
 				for (let i = 0; i < o.categories.length; i++) {
 					const category = o.categories[i];
-					if (!/^[a-zA-z0-9_-]+$/.test(category)) {
+					if (chineseRegex.test(category)) {
 						const tran =
 							translateDic[category] ||
 							(await config.translate?.(category));
-						o.categories[i] = tran?.replace(/\s/g, "_") || category;
+						o.categories_en[i] =
+							tran?.replace(/\s/g, "_") || category;
 						!translateDic[category] &&
 							(translateDic[category] = tran);
+					} else {
+						o.categories_en[i] = o.categories[i];
 					}
 				}
 			}
@@ -114,6 +80,7 @@ export async function parseDir(files: string[], baseDir, config: Options) {
 	return md;
 }
 
+/** 在Md对象基础上递归读取markdown内容并转换成html*/
 export async function parseMd(mdArr: Md[], config: Options) {
 	// 解析markdown
 	for (let i = 0; i < mdArr.length; i++) {
@@ -125,7 +92,7 @@ export async function parseMd(mdArr: Md[], config: Options) {
 				encoding: "utf-8",
 			});
 			mdObj.parseContent = markdownIt
-				.render(content)
+				.render(escapeHtml(content))
 				.replace(/\u200B/g, "")
 				.replace(/\u00a0/g, "");
 		}

@@ -1,16 +1,18 @@
 import { markdownIt } from "./parse";
 const tocList = {};
 // 生成目录文件
-export function handleToc(mds: Md[]) {
+export function handleToc(mds: Md[], options: { prefixUrl?: string } = {}) {
+	const { prefixUrl = "" } = options;
 	for (let i = 0; i < mds.length; i++) {
 		const md = mds[i];
 		if (Array.isArray(md)) {
-			handleToc(md);
+			handleToc(md, options);
 		} else {
 			let li = "- ";
 			let allCategory = "/";
-			for (let j = 0; j < md.categories.length; j++) {
-				const category = md.categories[j];
+			const categories = md.categories_en || md.categories;
+			for (let j = 0; j < categories.length; j++) {
+				const category = categories[j];
 				allCategory += category + "/";
 				if (!tocList[allCategory]) {
 					tocList[allCategory] = li + category;
@@ -20,7 +22,9 @@ export function handleToc(mds: Md[]) {
 			const title = md.title_en || md.title;
 			tocList[allCategory + title] =
 				li +
-				`[${title}](${allCategory + title.replace(/\s/g, "_") + "/"})`;
+				`[${md.title}](${
+					prefixUrl + allCategory + title.replace(/\s/g, "_") + "/"
+				})`;
 		}
 	}
 	return tocList;
