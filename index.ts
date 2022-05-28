@@ -188,12 +188,7 @@ export class MarkdownTo {
 					/`/g,
 					"\\`"
 				)}\`}`;
-				attr = attr
-					.replace(/class/g, "className")
-					.replace(/style=(['"])(.*?)\1/g, (match) =>
-						transformStyle(match.slice(7, -1))
-					);
-
+				attr = attr.replace(/class/g, "className");
 				return "<code" + attr + ">" + tokens[idx].content + "</code>";
 			};
 
@@ -207,11 +202,10 @@ export class MarkdownTo {
 			) {
 				tokens[idx].content =
 					"{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
-				return fence(tokens, idx, options, env, slf)
-					.replace(/class="/g, 'className="')
-					.replace(/style=(['"])(.*?)\1/g, (match) =>
-						transformStyle(match.slice(7, -1))
-					);
+				return fence(tokens, idx, options, env, slf).replace(
+					/class="/g,
+					'className="'
+				);
 			};
 			/** 解析html属性 */
 			markdownIt.renderer.renderAttrs = function renderAttrs(token) {
@@ -224,6 +218,7 @@ export class MarkdownTo {
 					const key = token.attrs[i][0];
 					let value = token.attrs[i][1];
 					if (key === "style") {
+						/** JSX style对象 */
 						value = JSON.stringify(
 							transformStyle(escapeHtml(value))
 						);

@@ -33,7 +33,9 @@ export function transformStyle(style) {
 	const temp: string[][] = style.split(";").map((item) => item.split(":"));
 	const res = {};
 	temp.forEach((sty) => {
-		res[sty[0].toString()] = sty[1].toString().trim();
+		res[
+			sty[0].toString().replace(/-(.)/g, (match, p1) => p1.toUpperCase())
+		] = sty[1].toString().trim();
 	});
 	return res;
 }

@@ -153,18 +153,14 @@ class MarkdownTo {
             parse_1.markdownIt.renderer.rules.code_inline = function (tokens, idx, options, env, slf) {
                 let attr = slf.renderAttrs(tokens[idx]);
                 tokens[idx].content = `{\`${tokens[idx].content.replace(/`/g, "\\`")}\`}`;
-                attr = attr
-                    .replace(/class/g, "className")
-                    .replace(/style=(['"])(.*?)\1/g, (match) => (0, util_1.transformStyle)(match.slice(7, -1)));
+                attr = attr.replace(/class/g, "className");
                 return "<code" + attr + ">" + tokens[idx].content + "</code>";
             };
             const fence = parse_1.markdownIt.renderer.rules.fence;
             parse_1.markdownIt.renderer.rules.fence = function escape_renderer(tokens, idx, options, env, slf) {
                 tokens[idx].content =
                     "{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
-                return fence(tokens, idx, options, env, slf)
-                    .replace(/class="/g, 'className="')
-                    .replace(/style=(['"])(.*?)\1/g, (match) => (0, util_1.transformStyle)(match.slice(7, -1)));
+                return fence(tokens, idx, options, env, slf).replace(/class="/g, 'className="');
             };
             /** 解析html属性 */
             parse_1.markdownIt.renderer.renderAttrs = function renderAttrs(token) {
@@ -177,6 +173,7 @@ class MarkdownTo {
                     const key = token.attrs[i][0];
                     let value = token.attrs[i][1];
                     if (key === "style") {
+                        /** JSX style对象 */
                         value = JSON.stringify((0, util_1.transformStyle)((0, util_1.escapeHtml)(value)));
                         result += " " + (0, util_1.escapeHtml)(key) + "=" + `{${value}}`;
                     }
