@@ -92,7 +92,7 @@ export async function parseMd(mdArr: Md[], config: Options) {
 				encoding: "utf-8",
 			});
 			mdObj.parseContent = markdownIt
-				.render(escapeHtml(content))
+				.render(content)
 				.replace(/\u200B/g, "")
 				.replace(/\u00a0/g, "");
 		}

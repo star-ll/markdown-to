@@ -4,16 +4,16 @@ exports.transformStyle = exports.escapeHtml = exports.chineseRegex = void 0;
 exports.chineseRegex = /[\u4e00-\u9fa5]/;
 /** 转义html字符 */
 // eslint-disable-next-line no-irregular-whitespace
-const HTML_ESCAPE_TEST_RE = /[&<>"$\\]/;
+const HTML_ESCAPE_TEST_RE = /[&<>"$]/;
 // eslint-disable-next-line no-irregular-whitespace
-const HTML_ESCAPE_REPLACE_RE = /[&<>"$\\]/g;
+const HTML_ESCAPE_REPLACE_RE = /[&<>"$]/g;
 const HTML_REPLACEMENTS = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
+    "'": "&apos;",
     $: "&#36",
-    "\\": "\\\\",
 };
 function replaceUnsafeChar(ch) {
     return HTML_REPLACEMENTS[ch];

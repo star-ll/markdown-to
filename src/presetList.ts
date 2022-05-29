@@ -40,23 +40,19 @@ export function presetHightLight(type: string) {
 			if (lang && hljs.getLanguage(lang)) {
 				try {
 					return (
-						'<pre class="hljs"><code>{`' +
-						hljs
-							.highlight(str.slice(2, -2), {
-								language: lang,
-								ignoreIllegals: true,
-							})
-							.value.replace(/[^\\]`/g, "\\`") +
-						"`}</code></pre>"
+						'<pre class="hljs"><code>' +
+						hljs.highlight(str, {
+							language: lang,
+							ignoreIllegals: true,
+						}).value +
+						"</code></pre>"
 					);
 				} catch (err) {
 					console.error("highlight error\n" + err);
 				}
 			}
 			return (
-				'<pre class="hljs"><code>{`' +
-				`${escapeHtml(str).replace(/[^\\]`/g, "\\`")}` +
-				"`}</code></pre>"
+				'<pre class="hljs"><code>' + escapeHtml(`str`) + "</code></pre>"
 			); // use external default escaping
 		};
 	}

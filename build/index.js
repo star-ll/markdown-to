@@ -13,14 +13,6 @@ const parse_1 = require("./src/parse");
 const file_1 = require("./src/file");
 const presetList_1 = require("./src/presetList");
 const util_1 = require("./src/util");
-let translateDic;
-try {
-    const translateDictionary = (0, fs_1.readFileSync)(path_1.default.resolve("./cache/translate.json"), { encoding: "utf-8" });
-    translateDic = JSON.parse(translateDictionary);
-}
-catch (__) {
-    translateDic = {};
-}
 class MarkdownTo {
     /**
      *
@@ -30,6 +22,20 @@ class MarkdownTo {
      */
     constructor(rootDir, outDir, config = {}) {
         this.mds = [];
+        try {
+            (0, fs_1.accessSync)(path_1.default.resolve("./cache"));
+        }
+        catch (__) {
+            this.translateDic = {};
+            (0, promises_1.mkdir)(path_1.default.resolve("./cache/"));
+        }
+        try {
+            const translateDictionary = (0, fs_1.readFileSync)(path_1.default.resolve("./cache/translate.json"), { encoding: "utf-8" });
+            this.translateDic = JSON.parse(translateDictionary);
+        }
+        catch (__) {
+            //
+        }
         const res = (0, fs_1.statSync)(rootDir);
         try {
             if (!res?.isDirectory()) {
@@ -55,7 +61,7 @@ class MarkdownTo {
             translate: typeof config.translate === "function"
                 ? config.translate
                 : translate_1.translate,
-            translateDic: translateDic || {},
+            translateDic: this.translateDic || {},
         };
         this.mdRules();
     }
@@ -157,10 +163,19 @@ class MarkdownTo {
                 return "<code" + attr + ">" + tokens[idx].content + "</code>";
             };
             const fence = parse_1.markdownIt.renderer.rules.fence;
-            parse_1.markdownIt.renderer.rules.fence = function escape_renderer(tokens, idx, options, env, slf) {
-                tokens[idx].content =
-                    "{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
-                return fence(tokens, idx, options, env, slf).replace(/class="/g, 'className="');
+            parse_1.markdownIt.renderer.rules.fence = function (tokens, idx, options, env, slf) {
+                // tokens[idx].content =
+                // 	"{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
+                tokens[idx].content = tokens[idx].content.replace(/`/g, "\\`");
+                return fence(tokens, idx, options, env, slf)
+                    .replace(/\}/g, "&#125;")
+                    .replace(/\{/g, "&#123;")
+                    .replace(/class/g, "className")
+                    .replace(/\/\//g, "&#47;&#47;")
+                    .replace(/\/\*/g, "&#47;&#42;")
+                    .replace(/\*\//g, "$1&#42;&#47;")
+                    .replace(/'/g, "&quot;")
+                    .replace(/\n/g, "<br />");
             };
             /** 解析html属性 */
             parse_1.markdownIt.renderer.renderAttrs = function renderAttrs(token) {
@@ -188,8 +203,8 @@ class MarkdownTo {
                 }
                 return result;
             };
-            // console.log(markdownIt.renderer.renderAttrs);
-            // console.log(markdownIt.renderer.renderAttrs.toString());
+            // console.log(markdownIt.renderer.rules);
+            // console.log(markdownIt.renderer.rules.fence.toString());
         }
     }
 }

@@ -1,7 +1,6 @@
 import path from "path";
-import { writeFileSync, readFileSync, statSync } from "fs";
+import { writeFileSync, readFileSync, statSync, accessSync } from "fs";
 import { mkdir, readdir, access, rm, writeFile } from "fs/promises";
-import jsx from "markdown-it-jsx";
 import { createMdToc, handleToc } from "./src/menu";
 import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
@@ -9,23 +8,13 @@ import { generateFile } from "./src/file";
 import { presetTemplate, presetHightLight } from "./src/presetList";
 import { transformStyle, escapeHtml } from "./src/util";
 
-let translateDic;
-try {
-	const translateDictionary = readFileSync(
-		path.resolve("./cache/translate.json"),
-		{ encoding: "utf-8" }
-	);
-	translateDic = JSON.parse(translateDictionary);
-} catch (__) {
-	translateDic = {};
-}
-
 export class MarkdownTo {
 	public mds: Md[] = [];
 	private outBaseDir: string;
 	private outDir: string;
 	private rootDir: string;
 	private config: Options;
+	private translateDic;
 
 	/**
 	 *
@@ -34,6 +23,21 @@ export class MarkdownTo {
 	 * @param config 配置对象 {@link Config}
 	 */
 	constructor(rootDir: string, outDir: string, config: Config = {}) {
+		try {
+			accessSync(path.resolve("./cache"));
+		} catch (__) {
+			this.translateDic = {};
+			mkdir(path.resolve("./cache/"));
+		}
+		try {
+			const translateDictionary = readFileSync(
+				path.resolve("./cache/translate.json"),
+				{ encoding: "utf-8" }
+			);
+			this.translateDic = JSON.parse(translateDictionary);
+		} catch (__) {
+			//
+		}
 		const res = statSync(rootDir);
 		try {
 			if (!res?.isDirectory()) {
@@ -61,7 +65,7 @@ export class MarkdownTo {
 				typeof config.translate === "function"
 					? config.translate
 					: translate,
-			translateDic: translateDic || {},
+			translateDic: this.translateDic || {},
 		};
 
 		this.mdRules();
@@ -157,25 +161,6 @@ export class MarkdownTo {
 
 		// 转换规则
 		if (["tsx", "jsx"].includes(this.config.type)) {
-			const isJSX = ["tsx", "jsx"].includes(this.config.type);
-			// markdownIt.renderer.rules.code_block = function (
-			// 	tokens,
-			// 	idx,
-			// 	option,
-			// 	env,
-			// 	slf
-			// ) {
-			// 	const token = tokens[idx];
-			// 	let content = escapeHtml(tokens[idx].content);
-			// 	let attr = slf.renderAttrs(token);
-			// 	if (isJSX) {
-			// 		content = `{\`${content}\`}`;
-			// 		attr = attr
-			// 			.replace(/class/g, "className")
-			// 			.replace(/style=(['"]).*?\1/g, "");
-			// 	}
-			// 	return "<pre" + attr + "><code>" + content + "</code></pre>\n";
-			// };
 			markdownIt.renderer.rules.code_inline = function (
 				tokens,
 				idx,
@@ -193,19 +178,23 @@ export class MarkdownTo {
 			};
 
 			const fence = markdownIt.renderer.rules.fence;
-			markdownIt.renderer.rules.fence = function escape_renderer(
+			markdownIt.renderer.rules.fence = function (
 				tokens,
 				idx,
 				options,
 				env,
 				slf
 			) {
-				tokens[idx].content =
-					"{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
-				return fence(tokens, idx, options, env, slf).replace(
-					/class="/g,
-					'className="'
-				);
+				tokens[idx].content = tokens[idx].content.replace(/`/g, "\\`");
+				return fence(tokens, idx, options, env, slf)
+					.replace(/\}/g, "&#125;")
+					.replace(/\{/g, "&#123;")
+					.replace(/class/g, "className")
+					.replace(/\/\//g, "&#47;&#47;")
+					.replace(/\/\*/g, "&#47;&#42;")
+					.replace(/\*\//g, "$1&#42;&#47;")
+					.replace(/'/g, "&quot;")
+					.replace(/\n/g, "<br />");
 			};
 			/** 解析html属性 */
 			markdownIt.renderer.renderAttrs = function renderAttrs(token) {
@@ -217,6 +206,7 @@ export class MarkdownTo {
 				for (i = 0, l = token.attrs.length; i < l; i++) {
 					const key = token.attrs[i][0];
 					let value = token.attrs[i][1];
+
 					if (key === "style") {
 						/** JSX style对象 */
 						value = JSON.stringify(
@@ -235,8 +225,8 @@ export class MarkdownTo {
 
 				return result;
 			};
-			// console.log(markdownIt.renderer.renderAttrs);
-			// console.log(markdownIt.renderer.renderAttrs.toString());
+			// console.log(markdownIt.renderer.rules);
+			// console.log(markdownIt.renderer.rules.fence.toString());
 		}
 	}
 }
