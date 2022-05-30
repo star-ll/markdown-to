@@ -174,7 +174,14 @@ export class MarkdownTo {
 					"\\`"
 				)}\`}`;
 				attr = attr.replace(/class/g, "className");
-				return "<code" + attr + ">" + tokens[idx].content + "</code>";
+				return (
+					"<code" +
+					' class="mdto-code-inline" ' +
+					attr +
+					">" +
+					tokens[idx].content +
+					"</code>"
+				);
 			};
 
 			const fence = markdownIt.renderer.rules.fence;

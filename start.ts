@@ -5,7 +5,7 @@ const options: Config = {
 	type: "tsx",
 	toc: true,
 };
-const mdTo = new MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);
+const mdTo = new MarkdownTo("", "./dist", options);
 
 const argv = process.argv.slice(2);
 

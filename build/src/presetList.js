@@ -56,26 +56,6 @@ function presetHightLight(type) {
             }
             return ('<pre class="hljs"><code>' + (0, util_1.escapeHtml)(`str`) + "</code></pre>"); // use external default escaping
         };
-        return function (str, lang) {
-            if (lang && highlight_js_1.default.getLanguage(lang)) {
-                try {
-                    return ('<pre class="hljs"><code>{`' +
-                        highlight_js_1.default
-                            .highlight(str.slice(2, -2), {
-                            language: lang,
-                            ignoreIllegals: true,
-                        })
-                            .value.replace(/[^\\]`/g, "\\`") +
-                        "`}</code></pre>");
-                }
-                catch (err) {
-                    console.error("highlight error\n" + err);
-                }
-            }
-            return ('<pre class="hljs"><code>{`' +
-                `${(0, util_1.escapeHtml)(str).replace(/[^\\]`/g, "\\`")}` +
-                "`}</code></pre>"); // use external default escaping
-        };
     }
     return function (str, lang) {
         if (lang && highlight_js_1.default.getLanguage(lang)) {

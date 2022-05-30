@@ -137,35 +137,19 @@ class MarkdownTo {
         parse_1.markdownIt.set({ highlight: (0, presetList_1.presetHightLight)(this.config.type) });
         // 转换规则
         if (["tsx", "jsx"].includes(this.config.type)) {
-            const isJSX = ["tsx", "jsx"].includes(this.config.type);
-            // markdownIt.renderer.rules.code_block = function (
-            // 	tokens,
-            // 	idx,
-            // 	option,
-            // 	env,
-            // 	slf
-            // ) {
-            // 	const token = tokens[idx];
-            // 	let content = escapeHtml(tokens[idx].content);
-            // 	let attr = slf.renderAttrs(token);
-            // 	if (isJSX) {
-            // 		content = `{\`${content}\`}`;
-            // 		attr = attr
-            // 			.replace(/class/g, "className")
-            // 			.replace(/style=(['"]).*?\1/g, "");
-            // 	}
-            // 	return "<pre" + attr + "><code>" + content + "</code></pre>\n";
-            // };
             parse_1.markdownIt.renderer.rules.code_inline = function (tokens, idx, options, env, slf) {
                 let attr = slf.renderAttrs(tokens[idx]);
                 tokens[idx].content = `{\`${tokens[idx].content.replace(/`/g, "\\`")}\`}`;
                 attr = attr.replace(/class/g, "className");
-                return "<code" + attr + ">" + tokens[idx].content + "</code>";
+                return ("<code" +
+                    ' class="mdto-code-inline" ' +
+                    attr +
+                    ">" +
+                    tokens[idx].content +
+                    "</code>");
             };
             const fence = parse_1.markdownIt.renderer.rules.fence;
             parse_1.markdownIt.renderer.rules.fence = function (tokens, idx, options, env, slf) {
-                // tokens[idx].content =
-                // 	"{`" + tokens[idx].content.replace(/`/g, "\\`") + "`}";
                 tokens[idx].content = tokens[idx].content.replace(/`/g, "\\`");
                 return fence(tokens, idx, options, env, slf)
                     .replace(/\}/g, "&#125;")
