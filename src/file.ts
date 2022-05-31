@@ -21,14 +21,7 @@ export async function generateFile(mdArr: Md[], config: Options) {
 					await mkdir(dirPath);
 				}
 			}
-			let parseContent = md.parseContent;
-			// toc
-			if (
-				config.toc === true ||
-				(Array.isArray(config.toc) && config.toc.includes(md.title))
-			) {
-				if (md.toc) parseContent = md.toc + "\n" + parseContent;
-			}
+			const parseContent = md.parseContent;
 
 			const content = presetTemplate(parseContent || "", config.type);
 			await writeFile(

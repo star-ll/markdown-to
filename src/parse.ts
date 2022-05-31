@@ -1,7 +1,7 @@
 import { readFile, stat, readdir } from "fs/promises";
 import path from "path";
 import MarkdownIt from "markdown-it";
-import { chineseRegex, escapeHtml } from "./util";
+import { chineseRegex, chineseRegexAll } from "./util";
 
 export const markdownIt: any = new MarkdownIt({
 	typographer: true,
@@ -52,7 +52,10 @@ export async function parseDir(files: string[], baseDir, config: Options) {
 					const tran =
 						translateDic[title] ||
 						(await config.translate?.(o.title));
-					o.title_en = tran?.replace(/\s/g, "_") || title;
+					o.title_en =
+						tran
+							?.replace(/\s/g, "_")
+							.replace(chineseRegexAll, "_") || title;
 					!translateDic[title] && (translateDic[title] = tran);
 				}
 				/** 翻译目录*/
@@ -66,7 +69,9 @@ export async function parseDir(files: string[], baseDir, config: Options) {
 							translateDic[category] ||
 							(await config.translate?.(category));
 						o.categories_en[i] =
-							tran?.replace(/\s/g, "_") || category;
+							tran
+								?.replace(/\s/g, "_")
+								.replace(chineseRegexAll, "_") || category;
 						!translateDic[category] &&
 							(translateDic[category] = tran);
 					} else {

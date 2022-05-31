@@ -52,7 +52,10 @@ async function parseDir(files, baseDir, config) {
                     const title = o.title;
                     const tran = translateDic[title] ||
                         (await config.translate?.(o.title));
-                    o.title_en = tran?.replace(/\s/g, "_") || title;
+                    o.title_en =
+                        tran
+                            ?.replace(/\s/g, "_")
+                            .replace(util_1.chineseRegexAll, "_") || title;
                     !translateDic[title] && (translateDic[title] = tran);
                 }
                 /** 翻译目录*/
@@ -65,7 +68,9 @@ async function parseDir(files, baseDir, config) {
                         const tran = translateDic[category] ||
                             (await config.translate?.(category));
                         o.categories_en[i] =
-                            tran?.replace(/\s/g, "_") || category;
+                            tran
+                                ?.replace(/\s/g, "_")
+                                .replace(util_1.chineseRegexAll, "_") || category;
                         !translateDic[category] &&
                             (translateDic[category] = tran);
                     }

@@ -1,12 +1,14 @@
 import path from "path";
 import { writeFileSync, readFileSync, statSync, accessSync } from "fs";
 import { mkdir, readdir, access, rm, writeFile } from "fs/promises";
-import { createMdToc, handleToc } from "./src/menu";
+import { handleToc } from "./src/menu";
 import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
 import { generateFile } from "./src/file";
 import { presetTemplate, presetHightLight } from "./src/presetList";
 import { transformStyle, escapeHtml } from "./src/util";
+import tocPlugin from "markdown-it-table-of-contents";
+import anchorPlugin from "markdown-it-anchor";
 
 export class MarkdownTo {
 	public mds: Md[] = [];
@@ -56,7 +58,7 @@ export class MarkdownTo {
 			ignores: config.ignores || [],
 			rootDir: this.rootDir || "./",
 			outDir: this.outDir || "./dist",
-			toc: config.toc || false,
+			toc: config.toc || {},
 			isTranslate:
 				config.isTranslate ||
 				process.argv.includes("--translate") ||
@@ -68,6 +70,12 @@ export class MarkdownTo {
 			translateDic: this.translateDic || {},
 		};
 
+		if (!this.config.toc.containerClass) {
+			this.config.toc.containerClass = "mdto-toc";
+		}
+
+		markdownIt.use(anchorPlugin, { tabIndex: false });
+		markdownIt.use(tocPlugin, config.toc);
 		this.mdRules();
 	}
 	public async render() {
@@ -144,9 +152,6 @@ export class MarkdownTo {
 			);
 		}
 
-		// toc目录
-		if (this.config.toc) await createMdToc(mds);
-
 		console.time("输出文件");
 		await generateFile(mds, this.config);
 		console.timeEnd("输出文件");
@@ -174,14 +179,7 @@ export class MarkdownTo {
 					"\\`"
 				)}\`}`;
 				attr = attr.replace(/class/g, "className");
-				return (
-					"<code" +
-					' class="mdto-code-inline" ' +
-					attr +
-					">" +
-					tokens[idx].content +
-					"</code>"
-				);
+				return "<code " + attr + ">" + tokens[idx].content + "</code>";
 			};
 
 			const fence = markdownIt.renderer.rules.fence;
@@ -211,7 +209,7 @@ export class MarkdownTo {
 				}
 				result = "";
 				for (i = 0, l = token.attrs.length; i < l; i++) {
-					const key = token.attrs[i][0];
+					let key = token.attrs[i][0];
 					let value = token.attrs[i][1];
 
 					if (key === "style") {
@@ -220,20 +218,27 @@ export class MarkdownTo {
 							transformStyle(escapeHtml(value))
 						);
 						result += " " + escapeHtml(key) + "=" + `{${value}}`;
-					} else {
-						result +=
-							" " +
-							escapeHtml(key) +
-							'="' +
-							escapeHtml(value) +
-							'"';
+						continue;
 					}
+					if (key === "class") {
+						key = "className";
+					}
+					result +=
+						" " + escapeHtml(key) + '="' + escapeHtml(value) + '"';
 				}
 
 				return result;
 			};
+			const { containerHeaderHtml, containerClass } = this.config.toc;
+			markdownIt.renderer.rules.toc_open = function (tokens, index) {
+				let tocOpenHtml = '<div className="' + containerClass + '">';
+				if (containerHeaderHtml) {
+					tocOpenHtml += containerHeaderHtml;
+				}
+				return tocOpenHtml;
+			};
 			// console.log(markdownIt.renderer.rules);
-			// console.log(markdownIt.renderer.rules.fence.toString());
+			// console.log(markdownIt.renderer.rules.toc_open.toString());
 		}
 	}
 }

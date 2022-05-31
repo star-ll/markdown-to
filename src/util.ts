@@ -1,4 +1,5 @@
 export const chineseRegex = /[\u4e00-\u9fa5]/;
+export const chineseRegexAll = /[\u4e00-\u9fa5]/g;
 
 /** 转义html字符 */
 // eslint-disable-next-line no-irregular-whitespace

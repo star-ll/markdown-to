@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transformStyle = exports.escapeHtml = exports.chineseRegex = void 0;
+exports.transformStyle = exports.escapeHtml = exports.chineseRegexAll = exports.chineseRegex = void 0;
 exports.chineseRegex = /[\u4e00-\u9fa5]/;
+exports.chineseRegexAll = /[\u4e00-\u9fa5]/g;
 /** 转义html字符 */
 // eslint-disable-next-line no-irregular-whitespace
 const HTML_ESCAPE_TEST_RE = /[&<>"$]/;

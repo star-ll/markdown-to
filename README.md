@@ -64,7 +64,7 @@ declare interface Config {
 	isTranslate?: boolean;
 	/** @property  自定义翻译函数*/
 	translate?: (q: string) => Promise<string | void> | string;
-	/** @property 实现toc文章目录的文件，boolean类型表示全部都生成toc目录或都不生成*/
+	/** @property 实验性功能，实现toc文章目录的文件，boolean类型表示全部都生成toc目录或都不生成*/
 	toc?: string[] | boolean;
 }
 ```

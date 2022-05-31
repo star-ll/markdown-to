@@ -43,7 +43,7 @@ function presetHightLight(type) {
         return function (str, lang) {
             if (lang && highlight_js_1.default.getLanguage(lang)) {
                 try {
-                    return ('<pre class="hljs"><code>' +
+                    return ('<pre class="hljs"><code class="mdto-code-block">' +
                         highlight_js_1.default.highlight(str, {
                             language: lang,
                             ignoreIllegals: true,
@@ -54,7 +54,9 @@ function presetHightLight(type) {
                     console.error("highlight error\n" + err);
                 }
             }
-            return ('<pre class="hljs"><code>' + (0, util_1.escapeHtml)(`str`) + "</code></pre>"); // use external default escaping
+            return ('<pre class="hljs"><code  class="mdto-code-block">' +
+                (0, util_1.escapeHtml)(`str`) +
+                "</code></pre>"); // use external default escaping
         };
     }
     return function (str, lang) {

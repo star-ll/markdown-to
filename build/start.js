@@ -4,7 +4,9 @@ const index_1 = require("./index");
 const options = {
     ignores: [".git"],
     type: "tsx",
-    toc: true,
+    toc: {
+        containerHeaderHtml: "<h2>目录</h2>",
+    },
 };
 const mdTo = new index_1.MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);
 const argv = process.argv.slice(2);

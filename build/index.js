@@ -13,6 +13,8 @@ const parse_1 = require("./src/parse");
 const file_1 = require("./src/file");
 const presetList_1 = require("./src/presetList");
 const util_1 = require("./src/util");
+const markdown_it_table_of_contents_1 = __importDefault(require("markdown-it-table-of-contents"));
+const markdown_it_anchor_1 = __importDefault(require("markdown-it-anchor"));
 class MarkdownTo {
     /**
      *
@@ -54,7 +56,7 @@ class MarkdownTo {
             ignores: config.ignores || [],
             rootDir: this.rootDir || "./",
             outDir: this.outDir || "./dist",
-            toc: config.toc || false,
+            toc: config.toc || {},
             isTranslate: config.isTranslate ||
                 process.argv.includes("--translate") ||
                 false,
@@ -63,6 +65,11 @@ class MarkdownTo {
                 : translate_1.translate,
             translateDic: this.translateDic || {},
         };
+        if (!this.config.toc.containerClass) {
+            this.config.toc.containerClass = "mdto-toc";
+        }
+        parse_1.markdownIt.use(markdown_it_anchor_1.default, { tabIndex: false });
+        parse_1.markdownIt.use(markdown_it_table_of_contents_1.default, config.toc);
         this.mdRules();
     }
     async render() {
@@ -122,9 +129,6 @@ class MarkdownTo {
                 encoding: "utf-8",
             });
         }
-        // toc目录
-        if (this.config.toc)
-            await (0, menu_1.createMdToc)(mds);
         console.time("输出文件");
         await (0, file_1.generateFile)(mds, this.config);
         console.timeEnd("输出文件");
@@ -141,12 +145,7 @@ class MarkdownTo {
                 let attr = slf.renderAttrs(tokens[idx]);
                 tokens[idx].content = `{\`${tokens[idx].content.replace(/`/g, "\\`")}\`}`;
                 attr = attr.replace(/class/g, "className");
-                return ("<code" +
-                    ' class="mdto-code-inline" ' +
-                    attr +
-                    ">" +
-                    tokens[idx].content +
-                    "</code>");
+                return "<code " + attr + ">" + tokens[idx].content + "</code>";
             };
             const fence = parse_1.markdownIt.renderer.rules.fence;
             parse_1.markdownIt.renderer.rules.fence = function (tokens, idx, options, env, slf) {
@@ -169,26 +168,32 @@ class MarkdownTo {
                 }
                 result = "";
                 for (i = 0, l = token.attrs.length; i < l; i++) {
-                    const key = token.attrs[i][0];
+                    let key = token.attrs[i][0];
                     let value = token.attrs[i][1];
                     if (key === "style") {
                         /** JSX style对象 */
                         value = JSON.stringify((0, util_1.transformStyle)((0, util_1.escapeHtml)(value)));
                         result += " " + (0, util_1.escapeHtml)(key) + "=" + `{${value}}`;
+                        continue;
                     }
-                    else {
-                        result +=
-                            " " +
-                                (0, util_1.escapeHtml)(key) +
-                                '="' +
-                                (0, util_1.escapeHtml)(value) +
-                                '"';
+                    if (key === "class") {
+                        key = "className";
                     }
+                    result +=
+                        " " + (0, util_1.escapeHtml)(key) + '="' + (0, util_1.escapeHtml)(value) + '"';
                 }
                 return result;
             };
+            const { containerHeaderHtml, containerClass } = this.config.toc;
+            parse_1.markdownIt.renderer.rules.toc_open = function (tokens, index) {
+                let tocOpenHtml = '<div className="' + containerClass + '">';
+                if (containerHeaderHtml) {
+                    tocOpenHtml += containerHeaderHtml;
+                }
+                return tocOpenHtml;
+            };
             // console.log(markdownIt.renderer.rules);
-            // console.log(markdownIt.renderer.rules.fence.toString());
+            // console.log(markdownIt.renderer.rules.toc_open.toString());
         }
     }
 }

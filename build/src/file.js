@@ -28,13 +28,7 @@ async function generateFile(mdArr, config) {
                     await (0, promises_1.mkdir)(dirPath);
                 }
             }
-            let parseContent = md.parseContent;
-            // toc
-            if (config.toc === true ||
-                (Array.isArray(config.toc) && config.toc.includes(md.title))) {
-                if (md.toc)
-                    parseContent = md.toc + "\n" + parseContent;
-            }
+            const parseContent = md.parseContent;
             const content = (0, presetList_1.presetTemplate)(parseContent || "", config.type);
             await (0, promises_1.writeFile)(path_1.default.join(dirPath, `${md.title_en || md.title}.${config.type}`), content, {
                 encoding: "utf-8",

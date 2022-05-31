@@ -3,9 +3,11 @@ import { MarkdownTo } from "./index";
 const options: Config = {
 	ignores: [".git"],
 	type: "tsx",
-	toc: true,
+	toc: {
+		containerHeaderHtml: "<h2>目录</h2>",
+	},
 };
-const mdTo = new MarkdownTo("", "./dist", options);
+const mdTo = new MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);
 
 const argv = process.argv.slice(2);
 
