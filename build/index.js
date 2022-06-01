@@ -13,7 +13,7 @@ const parse_1 = require("./src/parse");
 const file_1 = require("./src/file");
 const presetList_1 = require("./src/presetList");
 const util_1 = require("./src/util");
-const markdown_it_table_of_contents_1 = __importDefault(require("markdown-it-table-of-contents"));
+const markdown_it_toc_done_right_1 = __importDefault(require("markdown-it-toc-done-right"));
 const markdown_it_anchor_1 = __importDefault(require("markdown-it-anchor"));
 class MarkdownTo {
     /**
@@ -68,8 +68,10 @@ class MarkdownTo {
         if (!this.config.toc.containerClass) {
             this.config.toc.containerClass = "mdto-toc";
         }
+        const type = this.config.type;
         parse_1.markdownIt.use(markdown_it_anchor_1.default, { tabIndex: false });
-        parse_1.markdownIt.use(markdown_it_table_of_contents_1.default, config.toc);
+        // markdownIt.use(tocPlugin, config.toc);
+        parse_1.markdownIt.use(markdown_it_toc_done_right_1.default);
         this.mdRules();
     }
     async render() {
@@ -180,20 +182,30 @@ class MarkdownTo {
                         key = "className";
                     }
                     result +=
-                        " " + (0, util_1.escapeHtml)(key) + '="' + (0, util_1.escapeHtml)(value) + '"';
+                        " " +
+                            (0, util_1.transformJSXAttr)((0, util_1.escapeHtml)(key), (0, util_1.escapeHtml)(value));
                 }
                 return result;
             };
-            const { containerHeaderHtml, containerClass } = this.config.toc;
-            parse_1.markdownIt.renderer.rules.toc_open = function (tokens, index) {
-                let tocOpenHtml = '<div className="' + containerClass + '">';
-                if (containerHeaderHtml) {
-                    tocOpenHtml += containerHeaderHtml;
+            const tocOptions = this.config.toc;
+            parse_1.markdownIt.renderer.rules.tocOpen = function (tokens, idx /* , options, env, renderer */) {
+                let _options = { ...tocOptions };
+                if (tokens && idx >= 0) {
+                    const token = tokens[idx];
+                    _options = Object.assign(_options, token.inlineOptions);
                 }
-                return tocOpenHtml;
+                const id = _options.containerId
+                    ? ` id="${(0, util_1.escapeHtml)(_options.containerId)}"`
+                    : "";
+                const containerHeaderHtml = _options.containerHeaderHtml || "";
+                return `<nav${id} className="${(0, util_1.escapeHtml)(_options.containerClass)}">${containerHeaderHtml}`;
             };
-            // console.log(markdownIt.renderer.rules);
-            // console.log(markdownIt.renderer.rules.toc_open.toString());
+            parse_1.markdownIt.renderer.rules.tocClose = function () {
+                const containerFooterHtml = tocOptions.containerFooterHtml || "";
+                return `${containerFooterHtml}</nav>`;
+            };
+            console.log(parse_1.markdownIt.renderer.rules);
+            console.log(parse_1.markdownIt.renderer.rules.tocClose.toString());
         }
     }
 }

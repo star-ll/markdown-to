@@ -40,3 +40,8 @@ export function transformStyle(style) {
 	});
 	return res;
 }
+export function transformJSXAttr(key, value) {
+	key.toString().replace(/-(.)/g, (match, p1) => p1.toUpperCase());
+	if (typeof value === "string") value = `"${value}"`;
+	return `${key}={${value}}`;
+}

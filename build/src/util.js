@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transformStyle = exports.escapeHtml = exports.chineseRegexAll = exports.chineseRegex = void 0;
+exports.transformJSXAttr = exports.transformStyle = exports.escapeHtml = exports.chineseRegexAll = exports.chineseRegex = void 0;
 exports.chineseRegex = /[\u4e00-\u9fa5]/;
 exports.chineseRegexAll = /[\u4e00-\u9fa5]/g;
 /** 转义html字符 */
@@ -41,3 +41,10 @@ function transformStyle(style) {
     return res;
 }
 exports.transformStyle = transformStyle;
+function transformJSXAttr(key, value) {
+    key.toString().replace(/-(.)/g, (match, p1) => p1.toUpperCase());
+    if (typeof value === "string")
+        value = `"${value}"`;
+    return `${key}={${value}}`;
+}
+exports.transformJSXAttr = transformJSXAttr;

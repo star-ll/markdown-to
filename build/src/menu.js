@@ -14,7 +14,6 @@ function handleToc(mds, options = {}) {
             let li = "- ";
             let allCategory = "/";
             const categories = md.categories_en || md.categories;
-            console.log(li, " ", categories, " ");
             for (let j = 0; j < categories.length; j++) {
                 const category = categories[j];
                 if (!category) {

@@ -5,6 +5,7 @@ const options: Config = {
 	type: "tsx",
 	toc: {
 		containerHeaderHtml: "<h2>目录</h2>",
+		containerFooterHtml: "<hr />",
 	},
 };
 const mdTo = new MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);

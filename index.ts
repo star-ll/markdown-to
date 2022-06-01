@@ -6,8 +6,8 @@ import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
 import { generateFile } from "./src/file";
 import { presetTemplate, presetHightLight } from "./src/presetList";
-import { transformStyle, escapeHtml } from "./src/util";
-import tocPlugin from "markdown-it-table-of-contents";
+import { transformStyle, escapeHtml, transformJSXAttr } from "./src/util";
+import tocPlugin from "markdown-it-toc-done-right";
 import anchorPlugin from "markdown-it-anchor";
 
 export class MarkdownTo {
@@ -74,8 +74,11 @@ export class MarkdownTo {
 			this.config.toc.containerClass = "mdto-toc";
 		}
 
+		const type = this.config.type;
 		markdownIt.use(anchorPlugin, { tabIndex: false });
-		markdownIt.use(tocPlugin, config.toc);
+		// markdownIt.use(tocPlugin, config.toc);
+		markdownIt.use(tocPlugin);
+
 		this.mdRules();
 	}
 	public async render() {
@@ -224,21 +227,39 @@ export class MarkdownTo {
 						key = "className";
 					}
 					result +=
-						" " + escapeHtml(key) + '="' + escapeHtml(value) + '"';
+						" " +
+						transformJSXAttr(escapeHtml(key), escapeHtml(value));
 				}
 
 				return result;
 			};
-			const { containerHeaderHtml, containerClass } = this.config.toc;
-			markdownIt.renderer.rules.toc_open = function (tokens, index) {
-				let tocOpenHtml = '<div className="' + containerClass + '">';
-				if (containerHeaderHtml) {
-					tocOpenHtml += containerHeaderHtml;
+
+			const tocOptions = this.config.toc;
+			markdownIt.renderer.rules.tocOpen = function (
+				tokens,
+				idx /* , options, env, renderer */
+			) {
+				let _options = { ...tocOptions };
+				if (tokens && idx >= 0) {
+					const token = tokens[idx];
+					_options = Object.assign(_options, token.inlineOptions);
 				}
-				return tocOpenHtml;
+				const id = _options.containerId
+					? ` id="${escapeHtml(_options.containerId)}"`
+					: "";
+				const containerHeaderHtml = _options.containerHeaderHtml || "";
+
+				return `<nav${id} className="${escapeHtml(
+					_options.containerClass
+				)}">${containerHeaderHtml}`;
+			};
+			markdownIt.renderer.rules.tocClose = function () {
+				const containerFooterHtml =
+					tocOptions.containerFooterHtml || "";
+				return `${containerFooterHtml}</nav>`;
 			};
 			// console.log(markdownIt.renderer.rules);
-			// console.log(markdownIt.renderer.rules.toc_open.toString());
+			// console.log(markdownIt.renderer.rules.tocClose.toString());
 		}
 	}
 }

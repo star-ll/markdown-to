@@ -6,6 +6,7 @@ const options = {
     type: "tsx",
     toc: {
         containerHeaderHtml: "<h2>目录</h2>",
+        containerFooterHtml: "<hr />",
     },
 };
 const mdTo = new index_1.MarkdownTo("/我的学习/my-knowledge-base", "./dist", options);

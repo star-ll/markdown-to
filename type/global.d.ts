@@ -1,20 +1,21 @@
 declare type Toc = {
-	/** @property 生成目录的标题等级,默认是[1,2] */
-	includeLevel?: number[];
+	/** @property 生成目录的标题等级,默认是1 */
+	level?: number;
+	/** @property 列表类型 ul 或 ol(默认) */
+	listType?: "ul" | "ol";
+	/** @property 识别toc的正则表达式字符串，
+	 * 默认是 '(\\$\\{toc\\}|\\[\\[?_?toc_?\\]?\\]|\\$\\<toc(\\{[^}]*\\})\\>)' */
+	placeholder?: string;
 	/** @property 目录div的类名,默认mdto-toc */
 	containerClass?: string;
-	/** @property 识别toc的正则表达式，默认是 /^\[\[toc\]\]/im */
-	markerPattern?: RegExp;
-	/** @property 列表类型 ul(默认) 或 ol */
-	listType?: "ul" | "ol";
-	/** @property 自定义标题格式的函数 */
-	format?: (content: string) => string;
+	/** @property 目录div的ID,默认undefined */
+	containerId?: string;
+	/** @property 列表(ul/ol)的类名 */
+	listClass?: string;
 	/** @property 设置容器头部格式的HTML字符串 */
 	containerHeaderHtml?: string;
 	/** @property 设置容器底部格式的HTML字符串 */
 	containerFooterHtml?: string;
-	/** @property 自定义转换toc链接的函数 */
-	transformLink?: (link: string) => string;
 };
 
 declare interface Config {
@@ -31,7 +32,8 @@ declare interface Config {
 	isTranslate?: boolean;
 	/** @property  自定义翻译函数*/
 	translate?: (q: string) => Promise<string | void> | string;
-	/** @property 实现toc文章目录*/
+	/** @property 实现toc文章目录,
+	 * 将${toc} | [[toc]] | [toc] | [[_toc_]] 转成目录*/
 	toc?: Toc;
 }
 
