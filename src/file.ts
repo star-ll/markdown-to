@@ -23,7 +23,10 @@ export async function generateFile(mdArr: Md[], config: Options) {
 			}
 			const parseContent = md.parseContent;
 
-			const content = presetTemplate(parseContent || "", config.type);
+			const content =
+				typeof config.template === "function"
+					? config.template(parseContent || "", { type: config.type })
+					: presetTemplate(parseContent || "", { type: config.type });
 			await writeFile(
 				path.join(dirPath, `${md.title_en || md.title}.${config.type}`),
 				content,

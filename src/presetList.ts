@@ -1,7 +1,12 @@
 import { escapeHtml } from "./util";
 import hljs from "highlight.js"; // https://highlightjs.org/
 
-export function presetTemplate(content: string, type: string) {
+export function presetTemplate(
+	content: string,
+	meta: {
+		type: string;
+	}
+) {
 	const presetList = {
 		html: `<!DOCTYPE html>
             <html lang="zh">
@@ -22,16 +27,16 @@ export function presetTemplate(content: string, type: string) {
             <style></style>
             `,
 		jsx: `export default function Article() {
-                return <>${content}</>;
+                return <div>${content}</div>;
             }
             `,
 		tsx: `export default function Article() {
-            return <>${content}</>;
+            return <div>${content}</div>;
             }
             `,
 	};
 
-	return presetList[type];
+	return presetList[meta.type];
 }
 
 export function presetHightLight(type: string) {

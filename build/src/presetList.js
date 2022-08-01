@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.presetHightLight = exports.presetTemplate = void 0;
 const util_1 = require("./util");
 const highlight_js_1 = __importDefault(require("highlight.js")); // https://highlightjs.org/
-function presetTemplate(content, type) {
+function presetTemplate(content, meta) {
     const presetList = {
         html: `<!DOCTYPE html>
             <html lang="zh">
@@ -27,15 +27,15 @@ function presetTemplate(content, type) {
             <style></style>
             `,
         jsx: `export default function Article() {
-                return <>${content}</>;
+                return <div>${content}</div>;
             }
             `,
         tsx: `export default function Article() {
-            return <>${content}</>;
+            return <div>${content}</div>;
             }
             `,
     };
-    return presetList[type];
+    return presetList[meta.type];
 }
 exports.presetTemplate = presetTemplate;
 function presetHightLight(type) {

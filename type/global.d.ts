@@ -35,6 +35,14 @@ declare interface Config {
 	/** @property 实现toc文章目录,
 	 * 将${toc} | [[toc]] | [toc] | [[_toc_]] 转成目录*/
 	toc?: Toc;
+	/** @property 自定义模板函数 */
+	template?: (
+		content: string,
+		meta: {
+			type: Types;
+			title?: string;
+		}
+	) => string;
 }
 
 declare interface Options {
@@ -48,6 +56,12 @@ declare interface Options {
 	/** 翻译字典(缓存)*/
 	translateDic: object;
 	toc: Toc;
+	template?: (
+		content: string,
+		meta: {
+			type: Types;
+		}
+	) => string;
 }
 
 declare interface Md {

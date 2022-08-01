@@ -29,7 +29,9 @@ async function generateFile(mdArr, config) {
                 }
             }
             const parseContent = md.parseContent;
-            const content = (0, presetList_1.presetTemplate)(parseContent || "", config.type);
+            const content = typeof config.template === "function"
+                ? config.template(parseContent || "", { type: config.type })
+                : (0, presetList_1.presetTemplate)(parseContent || "", { type: config.type });
             await (0, promises_1.writeFile)(path_1.default.join(dirPath, `${md.title_en || md.title}.${config.type}`), content, {
                 encoding: "utf-8",
                 flag: "w+",

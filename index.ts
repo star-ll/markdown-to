@@ -51,7 +51,7 @@ export class MarkdownTo {
 
 		this.rootDir = path.resolve(rootDir);
 		this.outBaseDir = path.resolve(outDir);
-		this.outDir = path.join(this.outBaseDir, config.type || "vue");
+		this.outDir = this.outBaseDir;
 		this.config = {
 			md: config.md || /\.md$/,
 			type: config.type || "vue",
@@ -68,16 +68,15 @@ export class MarkdownTo {
 					? config.translate
 					: translate,
 			translateDic: this.translateDic || {},
+			template: config.template,
 		};
 
 		if (!this.config.toc.containerClass) {
 			this.config.toc.containerClass = "mdto-toc";
 		}
 
-		const type = this.config.type;
 		markdownIt.use(anchorPlugin, { tabIndex: false });
-		// markdownIt.use(tocPlugin, config.toc);
-		markdownIt.use(tocPlugin);
+		markdownIt.use(tocPlugin, config.toc);
 
 		this.mdRules();
 	}
@@ -114,7 +113,7 @@ export class MarkdownTo {
 		list = markdownIt.render(list);
 		writeFileSync(
 			`./dist/toc.${this.config.type}`,
-			presetTemplate(list, this.config.type),
+			presetTemplate(list, { type: this.config.type }),
 			{
 				flag: "w+",
 				encoding: "utf-8",

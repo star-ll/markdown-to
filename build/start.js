@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const options = {
     ignores: [".git"],
-    type: "tsx",
+    type: "html",
     toc: {
         containerHeaderHtml: "<h2>目录</h2>",
         containerFooterHtml: "<hr />",
