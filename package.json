@@ -8,9 +8,10 @@
 		"url": "https://github.com/const-love-365-10000/markdown-to/issues"
 	},
 	"scripts": {
-		"start": "tsc && node build/start.js",
-		"start:tocFile": "tsc && node build/start.js --toc-file",
-		"start:translate": "tsc && node build/start.js --translate",
+		"start": "tsc && node build/script/start.js",
+		"start:tocFile": "tsc && node build/script/start.js --toc-file",
+		"start:translate": "tsc && node build/script/start.js --translate",
+		"build": "tsc",
 		"test": "node test/test.mjs",
 		"publish": "tsc && npm publish"
 	},

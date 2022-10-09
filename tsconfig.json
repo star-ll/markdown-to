@@ -99,7 +99,7 @@
 	},
 	"include": [
 		"type/global.d.ts",
-		"./start.ts",
+		"script/*",
 		"./index.ts",
 		"src/presetList.ts"
 	],

@@ -48,8 +48,7 @@ class MarkdownTo {
             console.error("根目录路径不存在\n", err);
         }
         this.rootDir = path_1.default.resolve(rootDir);
-        this.outBaseDir = path_1.default.resolve(outDir);
-        this.outDir = this.outBaseDir;
+        this.outDir = path_1.default.resolve(outDir);
         this.config = {
             md: config.md || /\.md$/,
             type: config.type || "vue",
@@ -74,16 +73,32 @@ class MarkdownTo {
         this.mdRules();
     }
     async render() {
-        await this.check();
+        await this.regenerateDir(this.outDir);
         await this.start();
     }
-    check() {
-        // 检查输出目录，如果输出目录不存在则创建
-        (0, promises_1.rm)(this.outBaseDir, { recursive: true, force: true })
-            .then(() => (0, promises_1.access)(this.outBaseDir))
-            .catch(() => (0, promises_1.mkdir)(this.outBaseDir))
-            .then(() => (0, promises_1.access)(this.outDir))
-            .catch(() => (0, promises_1.mkdir)(this.outDir));
+    /**
+     * @function check 检查路径是否存在
+     * @param {string} path 文件或目录的绝对路径
+     * @return {boolean}  路径是否是文件
+     *   */
+    async checkPath(path) {
+        const fileStat = await (0, promises_1.stat)(path);
+        if (fileStat.isFile()) {
+            true;
+        }
+        if (fileStat.isDirectory()) {
+            return false;
+        }
+    }
+    async regenerateDir(path) {
+        try {
+            await this.checkPath(path);
+            await (0, promises_1.rm)(path, { recursive: true });
+        }
+        catch (__) {
+            //
+        }
+        await (0, promises_1.mkdir)(path, { recursive: true });
     }
     /**
      *

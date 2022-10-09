@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const index_1 = require("./index");
+const index_1 = require("../index");
 const options = {
     ignores: [".git"],
-    type: "html",
+    type: "tsx",
     toc: {
         containerHeaderHtml: "<h2>目录</h2>",
         containerFooterHtml: "<hr />",

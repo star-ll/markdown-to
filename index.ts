@@ -1,6 +1,6 @@
 import path from "path";
 import { writeFileSync, readFileSync, statSync, accessSync } from "fs";
-import { mkdir, readdir, access, rm, writeFile } from "fs/promises";
+import { mkdir, readdir, access, rm, writeFile, stat } from "fs/promises";
 import { handleToc } from "./src/menu";
 import { translate } from "./src/translate";
 import { parseMd, markdownIt, parseDir } from "./src/parse";
@@ -12,7 +12,6 @@ import anchorPlugin from "markdown-it-anchor";
 
 export class MarkdownTo {
 	public mds: Md[] = [];
-	private outBaseDir: string;
 	private outDir: string;
 	private rootDir: string;
 	private config: Options;
@@ -50,8 +49,7 @@ export class MarkdownTo {
 		}
 
 		this.rootDir = path.resolve(rootDir);
-		this.outBaseDir = path.resolve(outDir);
-		this.outDir = this.outBaseDir;
+		this.outDir = path.resolve(outDir);
 		this.config = {
 			md: config.md || /\.md$/,
 			type: config.type || "vue",
@@ -81,16 +79,33 @@ export class MarkdownTo {
 		this.mdRules();
 	}
 	public async render() {
-		await this.check();
+		await this.regenerateDir(this.outDir);
 		await this.start();
 	}
-	private check() {
-		// 检查输出目录，如果输出目录不存在则创建
-		rm(this.outBaseDir, { recursive: true, force: true })
-			.then(() => access(this.outBaseDir))
-			.catch(() => mkdir(this.outBaseDir))
-			.then(() => access(this.outDir))
-			.catch(() => mkdir(this.outDir));
+	/**
+	 * @function check 检查路径是否存在
+	 * @param {string} path 文件或目录的绝对路径
+	 * @return {boolean}  路径是否是文件
+	 *   */
+	private async checkPath(path: string): Promise<boolean | undefined | void> {
+		const fileStat = await stat(path);
+		if (fileStat.isFile()) {
+			true;
+		}
+		if (fileStat.isDirectory()) {
+			return false;
+		}
+	}
+
+	private async regenerateDir(path: string) {
+		try {
+			await this.checkPath(path);
+			await rm(path, { recursive: true });
+		} catch (__) {
+			//
+		}
+
+		await mkdir(path, { recursive: true });
 	}
 
 	/**

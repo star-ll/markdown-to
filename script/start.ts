@@ -1,4 +1,4 @@
-import { MarkdownTo } from "./index";
+import { MarkdownTo } from "../index";
 
 const options: Config = {
 	ignores: [".git"],
